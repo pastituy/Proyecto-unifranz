@@ -11,7 +11,7 @@ import DonateModal from "../../components/donateModal";
 const Navbar = ({ navLinks, scrollToSection }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeNavItem, setActiveNavItem] = useState("inicio");
-  
+
   const openDonateModal = () => {
     setIsModalOpen(true);
   };
@@ -32,38 +32,38 @@ const Navbar = ({ navLinks, scrollToSection }) => {
         <span>Feliz</span>
       </Logo>
       <Nav>
-        <NavItem 
-          active={activeNavItem === "inicio"} 
+        <NavItem
+          active={activeNavItem === "inicio"}
           onClick={() => handleNavClick("inicio")}
         >
           Inicio
         </NavItem>
-        <NavItem 
-          active={activeNavItem === "blog"} 
+        <NavItem
+          active={activeNavItem === "blog"}
           onClick={() => handleNavClick("blog")}
         >
           Blog
         </NavItem>
-        <NavItem 
-          active={activeNavItem === "casos"} 
+        <NavItem
+          active={activeNavItem === "casos"}
           onClick={() => handleNavClick("casos")}
         >
           Casos
         </NavItem>
-        <NavItem 
-          active={activeNavItem === "eventos"} 
+        <NavItem
+          active={activeNavItem === "eventos"}
           onClick={() => handleNavClick("eventos")}
         >
           Eventos
         </NavItem>
-        <NavItem 
-          active={activeNavItem === "campanas"} 
+        <NavItem
+          active={activeNavItem === "campanas"}
           onClick={() => handleNavClick("campanas")}
         >
           Campañas
         </NavItem>
-        <NavItem 
-          active={activeNavItem === "contacto"} 
+        <NavItem
+          active={activeNavItem === "contacto"}
           onClick={() => handleNavClick("contacto")}
         >
           Contacto

@@ -6,6 +6,7 @@ import { IoCloseOutline } from "react-icons/io5";
 import { MdAdd, MdDelete } from "react-icons/md";
 import Table from "../../../components/ui/table";
 import toast from "react-hot-toast";
+import ExportButtons from "../../../components/ui/ExportButtons";
 
 const Noticias = () => {
   const [showModal, setShowModal] = useState(false);
@@ -355,23 +356,27 @@ const Noticias = () => {
       addTag();
     }
   };
+const handleExportStart = (type) => {
+    console.log(`Iniciando exportación: ${type}`);
+  };
 
+  const handleExportEnd = (type) => {
+    console.log(`Exportación completada: ${type}`);
+  };
   return (
     <Container>
       <TopSection>
         <DateFile>
           <LoginButton onClick={openModal}>Agregar</LoginButton>
-          <ButtonExcel onClick={exportToExcel}>
-            <PiMicrosoftExcelLogoFill
-              color="#2ba84a"
-              style={{ fontSize: "1.4rem" }}
-            />
-            Excel
-          </ButtonExcel>
-          <ButtonPDF onClick={exportToPDF}>
-            <FaRegFilePdf color="#f25c54" style={{ fontSize: "1rem" }} />
-            PDF
-          </ButtonPDF>
+            <ExportButtons
+            data={dataEvento}
+            columns={columns}
+            fileName="noticias"
+            title="Reporte de noticias"
+            sheetName="Noticias"
+            onExportStart={handleExportStart}
+            onExportEnd={handleExportEnd}
+          />
         </DateFile>
       </TopSection>
 

@@ -5,6 +5,7 @@ import DonateModal from "../../components/donateModal";
 
 const HeroSection = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedAmount, setSelectedAmount] = useState(100);
 
   const openDonateModal = () => {
     setIsModalOpen(true);
@@ -12,6 +13,11 @@ const HeroSection = () => {
 
   const closeDonateModal = () => {
     setIsModalOpen(false);
+  };
+
+  const handleAmountClick = (amount) => {
+    setSelectedAmount(amount);
+    openDonateModal();
   };
 
   return (
@@ -24,8 +30,28 @@ const HeroSection = () => {
           <br />puede cambiar una vida entera.
         </Heading>
         <SubHeading>
-          Porque cada sonrisa de un niño vale más de lo que imaginas. Tu donación hoy puede transformar su mañana.
+          “Tu apoyo brinda a niños con cáncer acceso a quimioterapia, medicinas y atención integral que transforma su futuro.”
         </SubHeading>
+        
+        {/* Botones de Montos */}
+        <DonationPrompt>¿Te gustaría hacer algo extraordinario hoy?</DonationPrompt>
+        <AmountButtonsGrid>
+          <AmountButton onClick={() => handleAmountClick(50)}>
+            Bs 50
+          </AmountButton>
+          <AmountButton onClick={() => handleAmountClick(100)} className="popular">
+            Bs 100
+            <PopularBadge>Popular</PopularBadge>
+          </AmountButton>
+          <AmountButton onClick={() => handleAmountClick(150)}>
+            Bs 150
+          </AmountButton>
+          <AmountButton onClick={() => handleAmountClick(null)}>
+            Otro Monto
+          </AmountButton>
+        </AmountButtonsGrid>
+        <OptionText>Opción más elegida</OptionText>
+        
         <DonateButton onClick={openDonateModal}>Donar ahora</DonateButton>
       </ContentWrapper>
       
@@ -90,7 +116,7 @@ const HeroSection = () => {
         />
       </ImageWrapper>
       
-      <DonateModal isOpen={isModalOpen} onClose={closeDonateModal} />
+      <DonateModal isOpen={isModalOpen} onClose={closeDonateModal} selectedAmount={selectedAmount} />
     </HeroContainer>
   );
 };
@@ -194,18 +220,89 @@ const SubHeading = styled.p`
   }
 `;
 
-const DonateButton = styled.button`
-  background-color: #FF6B35;
-  color: white;
-  border: none;
-  padding: 1rem 3rem;
+/* Estilos para los botones de montos */
+const DonationPrompt = styled.p`
   font-size: 1.1rem;
   font-weight: 600;
+  color: #DC143C;
+  margin-bottom: 1.5rem;
+  
+  @media (max-width: 768px) {
+    text-align: center;
+  }
+`;
+
+const AmountButtonsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  max-width: 500px;
+  margin-bottom: 1rem;
+  
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+`;
+
+const AmountButton = styled.button`
+  background-color: transparent;
+  color: #FF6B6B;
+  border: 2px solid #FF6B6B;
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  
+  &:hover {
+    background-color: #FF6B6B;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+  }
+  
+  &.popular {
+    border-style: dashed;
+  }
+`;
+
+const PopularBadge = styled.span`
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #FF6B6B;
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 600;
+`;
+
+const OptionText = styled.p`
+  font-size: 0.9rem;
+  color: #777;
+  margin-bottom: 2rem;
+  
+  @media (max-width: 768px) {
+    text-align: center;
+  }
+`;
+
+const DonateButton = styled.button`
+  background-color: #DC143C;
+  color: white;
+  border: none;
+  padding: 1.5rem 4.5rem;
+  font-size: 1.4rem;
+  font-weight: 700;
   border-radius: 50px;
   cursor: pointer;
   transition: all 0.3s ease;
   align-self: flex-start;
-  box-shadow: 0 5px 15px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 5px 15px rgba(220, 20, 60, 0.4);
   position: relative;
   overflow: hidden;
   
@@ -221,8 +318,9 @@ const DonateButton = styled.button`
   }
   
   &:hover {
+    background-color: #B8102F;
     transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(255, 107, 53, 0.4);
+    box-shadow: 0 10px 25px rgba(220, 20, 60, 0.5);
     
     &::before {
       transform: translateX(100%);
@@ -236,6 +334,8 @@ const DonateButton = styled.button`
   
   @media (max-width: 768px) {
     align-self: center;
+    padding: 1.3rem 3.5rem;
+    font-size: 1.2rem;
   }
 `;
 

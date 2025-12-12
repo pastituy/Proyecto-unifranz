@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js",
+    "seed": "node prisma/seed-datos-iniciales.js",
+    "verify": "node verificar-seed.js",
+    "resumen": "node resumen-datos.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -11,17 +16,27 @@
   "type": "commonjs",
   "description": "",
   "dependencies": {
-    "@prisma/client": "^6.4.1",
+    "axios": "^1.13.2",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "jsonwebtoken": "^9.0.2"
-  },
-  "devDependencies": {
-    "prisma": "^6.4.1"
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "node-schedule": "^2.1.1",
+    "node-telegram-bot-api": "^0.66.0",
+    "nodemailer": "^7.0.11",
+    "pdf-parse": "^1.1.1",
+    "puppeteer": "^24.10.1",
+    "qrcode": "^1.5.4",
+    "twitter-api-v2": "^1.28.0"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
+  },
+  "devDependencies": {
+    "@prisma/client": "^6.19.0",
+    "nodemon": "^3.1.11",
+    "prisma": "^6.19.0"
   }
 }

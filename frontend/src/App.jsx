@@ -1,20 +1,33 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import Login from "./pages/public/login";
+import Verify2FA from "./pages/public/verify2fa";
 import Register from "./pages/public/register";
 import { ThemeProvider } from "styled-components";
 import Layout from "./pages/public/layout";
-import { UserProvider } from "./context/userContext";
+import { UserProvider, ROLES } from "./context/userContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import LayoutAdmin from "./pages/private/layout";
 import Events from "./pages/private/eventos";
 import Camp from "./pages/private/campana";
 import Noticias from "./pages/private/noticias";
 import Usuario from "./pages/private/usuario";
 import Donaciones from "./pages/private/donaciones";
-import RegistroPaciente from "./pages/private/paciente";
-import Tratamientos from "./pages/private/tratamiento";
-import Recuperados from "./pages/private/donacionesCampa";
 import CancerNewsChat from "./pages/private/chat";
+import Redes from "./pages/private/redes";
+import Psicologo from "./pages/private/psicologo";
+import TrabajoSocial from "./pages/private/trabajadorSocial";
+import Asistente from "./pages/private/asistente";
+import AdminBeneficiarios from "./pages/private/adminBeneficiarios";
+import TrabajadorSocialBeneficiarios from "./pages/private/trabajadorSocial/beneficiarios";
+import PsicologoBeneficiarios from "./pages/private/psicologo/beneficiarios";
+import AsistenteSolicitudes from "./pages/private/asistente/solicitudes";
+import AsistenteReportes from "./pages/private/asistente/reportes";
+import TrabajadorSocialReportes from "./pages/private/trabajadorSocial/reportes";
+import ChatWidget from "./components/chatbotrasa";
+import BankSimulator from "./pages/private/donaciones/BankSimulator";
+import { useUser } from "./context/userContext";
+
 const theme = {
   colors: {
     primary: "#FF6347", // Coral color similar a la imagen
@@ -34,9 +47,18 @@ const theme = {
     desktop: "1024px",
   },
 };
-function App() {
+
+// Componente wrapper para el chat que se muestra en TODAS las vistas
+const ConditionalChatWidget = () => {
+  // Siempre mostrar el chat en todas las vistas
+  return <ChatWidget />;
+};
+
+// Componente interno con acceso al contexto
+const AppContent = () => {
   return (
-    <UserProvider>
+    <>
+      <ConditionalChatWidget/>
       <ThemeProvider theme={theme}>
         {/*<Navbar />
       <HeroSection />
@@ -50,29 +72,178 @@ function App() {
 
         <BrowserRouter>
           <Routes>
+            {/* Rutas públicas */}
             <Route path="/" element={<Layout />} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/dasboard" element={<LayoutAdmin />}>
-              <Route path="/dasboard/eventos" element={<Events />} />
-              <Route path="/dasboard/campana" element={<Camp />} />
-              <Route path="/dasboard/noticias" element={<Noticias />} />
-              <Route path="/dasboard/usuario" element={<Usuario />} />
-              <Route path="/dasboard/donaciones" element={<Donaciones />} />
-              <Route path="/dasboard/paciente" element={<RegistroPaciente />} />
-              <Route path="/dasboard/tratamiento" element={<Tratamientos />} />
-              <Route
-                path="/dasboard/donaciones-campana"
-                element={<Recuperados />}
-              />
+            <Route path="/verify-2fa" element={<Verify2FA />} />
+
+            {/* Simulador de Banco (accesible sin autenticación para testing) */}
+            <Route path="/banco-simulador" element={<BankSimulator />} />
+
+            {/* Rutas protegidas del dashboard */}
+            <Route
+              path="/dasboard"
+              element={
+                <ProtectedRoute>
+                  <LayoutAdmin />
+                </ProtectedRoute>
+              }
+            >
+              {/* Rutas accesibles por ADMINISTRADOR y PSICOLOGO */}
               <Route
                 path="/dasboard/chat"
-                element={<CancerNewsChat />}
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR, ROLES.PSICOLOGO]}>
+                    <CancerNewsChat />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Rutas solo para Administrador */}
+              <Route
+                path="/dasboard/eventos"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
+                    <Events />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dasboard/campana"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
+                    <Camp />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dasboard/noticias"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
+                    <Noticias />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dasboard/usuario"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
+                    <Usuario />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dasboard/redes"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
+                    <Redes />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Rutas para Administrador */}
+              <Route
+                path="/dasboard/donaciones"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
+                    <Donaciones />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Rutas para Trabajador Social */}
+              <Route
+                path="/dasboard/trabajadorSocial"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.TRABAJADOR_SOCIAL]}>
+                    <TrabajoSocial />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dasboard/trabajadorSocial/beneficiarios"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.TRABAJADOR_SOCIAL]}>
+                    <TrabajadorSocialBeneficiarios />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Rutas para Psicólogo */}
+              <Route
+                path="/dasboard/psicologo"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.PSICOLOGO]}>
+                    <Psicologo />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dasboard/psicologo/beneficiarios"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.PSICOLOGO]}>
+                    <PsicologoBeneficiarios />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Rutas para Asistente/Coordinador */}
+              <Route
+                path="/dasboard/asistente"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.ASISTENTE]}>
+                    <Asistente />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dasboard/asistente/solicitudes"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.ASISTENTE]}>
+                    <AsistenteSolicitudes />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dasboard/asistente/reportes"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.ASISTENTE]}>
+                    <AsistenteReportes />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Rutas para Trabajador Social */}
+              <Route
+                path="/dasboard/trabajadorSocial/reportes"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.TRABAJADOR_SOCIAL]}>
+                    <TrabajadorSocialReportes />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Rutas para Administrador - Evaluación de Beneficiarios */}
+              <Route
+                path="/dasboard/beneficiarios"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
+                    <AdminBeneficiarios />
+                  </ProtectedRoute>
+                }
               />
             </Route>
           </Routes>
         </BrowserRouter>
       </ThemeProvider>
+    </>
+  );
+};
+
+function App() {
+  return (
+    <UserProvider>
+      <AppContent />
     </UserProvider>
   );
 }

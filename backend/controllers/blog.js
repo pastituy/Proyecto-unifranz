@@ -18,7 +18,6 @@ app.get("/tags", async (req, res) => {
     });
   }
 });
-
 app.get("/blog", async (req, res) => {
   try {
     const blog = await prisma.blog.findMany({
@@ -54,7 +53,6 @@ app.get("/blog", async (req, res) => {
     });
   }
 });
-
 app.post("/blog", async (req, res) => {
   try {
     const {

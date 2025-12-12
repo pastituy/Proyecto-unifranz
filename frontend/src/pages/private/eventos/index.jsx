@@ -5,6 +5,7 @@ import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
 import { IoCloseOutline } from "react-icons/io5";
 import Table from "../../../components/ui/table";
 import toast from "react-hot-toast";
+import ExportButtons from "../../../components/ui/ExportButtons";
 
 const Events = () => {
   const [showModal, setShowModal] = useState(false);
@@ -15,7 +16,6 @@ const Events = () => {
     titulo: "",
     descripcion: "",
     fecha: "",
-    img: "",
     ubicacion: "",
   });
   const [dataEvento, setDataEvento] = useState([]); //Aqui vamos guardar los datos que devuelva la api
@@ -31,34 +31,31 @@ const Events = () => {
           "Content-Type": "application/json",
         },
       });
-  
+
       const data = await response.json();
-  
+
       if (!response.ok) {
         toast.error(data.mensaje || "Error al obtener los eventos");
         return;
       }
-  
+
       setDataEvento(data.data);
-  
+
       if (data.mensaje) {
         toast.success(data.mensaje);
-        console.log(data.mensaje)
+        console.log(data.mensaje);
       }
-  
     } catch (error) {
       toast.error("Hubo un problema al iniciar sesión");
     }
   };
-  
 
-
-useEffect(() => {
-  if (!isFetched.current) {
-    getData();
-    isFetched.current = true;
-  }
-}, []);
+  useEffect(() => {
+    if (!isFetched.current) {
+      getData();
+      isFetched.current = true;
+    }
+  }, []);
 
   const resetForm = () => {
     setitem({
@@ -83,18 +80,17 @@ useEffect(() => {
   };
 
   const editarEvento = (data) => {
- 
-  setForm({
-    titulo: data.titulo || "",
-    descripcion: data.descripcion || "",
-    fecha: data.fecha || "",
-    img: data.img || "",
-    ubicacion: data.ubicacion || "",
-  });
-  
-  setitem(data);
-  setIsEditing(true);
-  setShowModal(true);
+    setForm({
+      titulo: data.titulo || "",
+      descripcion: data.descripcion || "",
+      fecha: data.fecha || "",
+      img: data.img || "",
+      ubicacion: data.ubicacion || "",
+    });
+
+    setitem(data);
+    setIsEditing(true);
+    setShowModal(true);
   };
 
   const eliminarEvento = async (id) => {
@@ -184,23 +180,36 @@ useEffect(() => {
       header: "Descripcion",
       acceso: "descripcion",
     },
+    {
+      header: "Fecha",
+      acceso: "fecha",
+    },
+    {
+      header: "Ubicación",
+      acceso: "ubicacion",
+    },
   ];
+  const handleExportStart = (type) => {
+    console.log(`Iniciando exportación: ${type}`);
+  };
+
+  const handleExportEnd = (type) => {
+    console.log(`Exportación completada: ${type}`);
+  };
   return (
     <Container>
       <TopSection>
         <DateFile>
           <LoginButton onClick={openModal}>Agregar</LoginButton>
-          <ButtonExcel onClick={exportToExcel}>
-            <PiMicrosoftExcelLogoFill
-              color="#2ba84a"
-              style={{ fontSize: "1.4rem" }}
-            />
-            Excel
-          </ButtonExcel>
-          <ButtonPDF onClick={exportToPDF}>
-            <FaRegFilePdf color="#f25c54" style={{ fontSize: "1rem" }} />
-            PDF
-          </ButtonPDF>
+          <ExportButtons
+            data={dataEvento}
+            columns={columns}
+            fileName="eventos"
+            title="Reporte de Eventos"
+            sheetName="Eventos"
+            onExportStart={handleExportStart}
+            onExportEnd={handleExportEnd}
+          />
         </DateFile>
       </TopSection>
 
@@ -266,7 +275,6 @@ useEffect(() => {
                     />
                   </FormGroup>
                 </FormRow>
-
 
                 <ButtonGroup>
                   <CancelButton type="button" onClick={closeModal}>

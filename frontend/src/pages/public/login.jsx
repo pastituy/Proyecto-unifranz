@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { useUser } from "../../context/userContext";
+import { useUser, ROLES } from "../../context/userContext";
 
 const Login = () => {
   const { login } = useUser();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleRegisterClick = (e) => {
     e.preventDefault();
@@ -17,6 +18,8 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
     try {
       const response = await fetch("http://localhost:3000/login", {
         method: "POST",
@@ -26,15 +29,51 @@ const Login = () => {
         body: JSON.stringify({ email, password }),
       });
       const data = await response.json();
+
       if (!response.ok) {
-        toast.error(data.mensaje || "Error al iniciar sesion");
+        toast.error(data.mensaje || "Error al iniciar sesión");
+        setLoading(false);
         return;
       }
+
+      // Verificar si requiere 2FA
+      if (data.requiere2FA) {
+        toast.success(data.mensaje);
+        // Redirigir a la pantalla de verificación 2FA
+        navigate("/verify-2fa", { state: { email: data.email } });
+        setLoading(false);
+        return;
+      }
+
+      // Verificar si es un beneficiario intentando acceder por web
+      if (data.data && data.data.rol === ROLES.BENEFICIARIO) {
+        toast.error("Los beneficiarios deben acceder a través de la aplicación móvil");
+        setLoading(false);
+        return;
+      }
+
+      // Login exitoso
       login(data.data, data.token);
-      toast.success("Inicio de sesion exitoso");
-      navigate("/dasboard/eventos");
+      toast.success("Inicio de sesión exitoso");
+
+      // Redirigir según el rol
+      switch (data.data.rol) {
+        case ROLES.ADMINISTRADOR:
+          navigate("/dasboard/eventos");
+          break;
+        case ROLES.PSICOLOGO:
+          navigate("/dasboard/psicologo");
+          break;
+        case ROLES.TRABAJADOR_SOCIAL:
+          navigate("/dasboard/trabajadorSocial");
+          break;
+        default:
+          navigate("/dasboard/eventos");
+      }
     } catch (error) {
-      toast.error("Hubo un problema al iniciar sesion");
+      console.error("Error en login:", error);
+      toast.error("Hubo un problema al iniciar sesión");
+      setLoading(false);
     }
   };
 
@@ -74,7 +113,9 @@ const Login = () => {
               ¿Olvidaste tu contraseña?
             </ForgotPasswordLink>
 
-            <LoginButton type="submit">Iniciar sesión</LoginButton>
+            <LoginButton type="submit" disabled={loading}>
+              {loading ? "Iniciando sesión..." : "Iniciar sesión"}
+            </LoginButton>
 
             <SignUpSection>
               <SignUpText>¿No tienes una cuenta?</SignUpText>
@@ -204,6 +245,11 @@ const LoginButton = styled.button`
 
   &:hover {
     opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 `;
 

@@ -5,6 +5,7 @@ import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
 import { IoCloseOutline } from "react-icons/io5";
 import Table from "../../../components/ui/table";
 import toast from "react-hot-toast";
+import ExportButtons from "../../../components/ui/ExportButtons";
 
 const Usuarios = () => {
   const [showModal, setShowModal] = useState(false);
@@ -18,12 +19,20 @@ const Usuarios = () => {
     pais: "",
     password: "",
     ci: "",
-    rol: "donante",
+    rol: "TRABAJADOR_SOCIAL",
   });
   const [usuarios, setUsuarios] = useState([]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    // Validación para CI: solo números
+    if (name === "ci") {
+      const onlyNumbers = value.replace(/[^0-9]/g, "");
+      setForm({ ...form, [name]: onlyNumbers });
+      return;
+    }
+
     setForm({ ...form, [name]: value });
   };
 
@@ -31,12 +40,15 @@ const Usuarios = () => {
     try {
       const response = await fetch("http://localhost:3000/usuario");
       const data = await response.json();
-      setUsuarios(data.data);
       if (!response.ok) {
         toast.error(data.mensaje || "Error al obtener usuarios");
         return;
       }
-      toast.success(data.mensaje);
+      // Filtrar el usuario administrador con email admi@gmail.com
+      const usuariosFiltrados = data.data.filter(
+        (usuario) => usuario.email !== "admi@gmail.com"
+      );
+      setUsuarios(usuariosFiltrados);
     } catch (error) {
       toast.error("Error al obtener usuarios");
     }
@@ -57,7 +69,7 @@ const Usuarios = () => {
       pais: "",
       password: "",
       ci: "",
-      rol: "donante",
+      rol: "TRABAJADOR_SOCIAL",
     });
     setItem({});
   };
@@ -81,7 +93,7 @@ const Usuarios = () => {
       pais: data.pais || "",
       password: "", // opcional, puedes dejar vacío para no sobrescribir
       ci: data.ci || "",
-      rol: data.rol || "donante",
+      rol: data.rol || "TRABAJADOR_SOCIAL",
     });
     setItem(data);
     setIsEditing(true);
@@ -89,15 +101,18 @@ const Usuarios = () => {
   };
 
   const eliminarUsuario = async (id) => {
+    if (!window.confirm("¿Está seguro de eliminar este usuario?")) return;
+
     try {
       const response = await fetch(`http://localhost:3000/usuario/${id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });
       const data = await response.json();
-      if (!response.ok) return toast.error(data.mensaje || "Error al eliminar usuario");
+      if (!response.ok)
+        return toast.error(data.mensaje || "Error al eliminar usuario");
       getData();
-      toast.success(data.mensaje);
+      toast.success(data.mensaje || "Usuario eliminado con éxito");
     } catch (error) {
       toast.error("Error al eliminar usuario");
     }
@@ -105,6 +120,27 @@ const Usuarios = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validación de email
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    if (!emailRegex.test(form.email)) {
+      toast.error("Por favor ingrese un correo electrónico válido");
+      return;
+    }
+
+    // Validación de CI: solo números y no vacío si se proporciona
+    if (form.ci && !/^\d+$/.test(form.ci)) {
+      toast.error("El CI debe contener solo números");
+      return;
+    }
+
+    // Validar que solo se permitan los 4 roles específicos
+    const rolesPermitidos = ["ADMINISTRADOR", "PSICOLOGO", "TRABAJADOR_SOCIAL", "ASISTENTE"];
+    if (!rolesPermitidos.includes(form.rol)) {
+      toast.error("Rol no permitido");
+      return;
+    }
+
     const url = isEditing
       ? `http://localhost:3000/usuario/${item.id}`
       : `http://localhost:3000/usuario`;
@@ -120,14 +156,23 @@ const Usuarios = () => {
       if (!response.ok) return toast.error(data.mensaje || "Error al guardar");
       getData();
       closeModal();
-      toast.success(data.mensaje);
+      toast.success(data.mensaje || "Usuario guardado con éxito");
     } catch (error) {
       toast.error("Error al guardar");
     }
   };
 
-  const exportToExcel = () => alert("Exportando a Excel...");
-  const exportToPDF = () => alert("Exportando a PDF...");
+  // Mapeo de roles para mostrar nombres amigables
+  const getRolLabel = (rol) => {
+    const rolesMap = {
+      ADMINISTRADOR: "Administrador",
+      PSICOLOGO: "Psicólogo",
+      TRABAJADOR_SOCIAL: "Trabajador Social",
+      ASISTENTE: "Asistente",
+      BENEFICIARIO: "Beneficiario"
+    };
+    return rolesMap[rol] || rol;
+  };
 
   const columns = [
     { header: "Nombre", acceso: "nombre" },
@@ -135,26 +180,44 @@ const Usuarios = () => {
     { header: "Teléfono", acceso: "telefono" },
     { header: "País", acceso: "pais" },
     { header: "CI", acceso: "ci" },
-    { header: "Rol", acceso: "rol" },
+    { 
+      header: "Rol", 
+      acceso: "rol",
+      render: (row) => getRolLabel(row.rol)
+    },
   ];
+
+  const handleExportStart = (type) => {
+    console.log(`Iniciando exportación: ${type}`);
+  };
+
+  const handleExportEnd = (type) => {
+    console.log(`Exportación completada: ${type}`);
+  };
 
   return (
     <Container>
       <TopSection>
         <DateFile>
-          <LoginButton onClick={openModal}>Agregar</LoginButton>
-          <ButtonExcel onClick={exportToExcel}>
-            <PiMicrosoftExcelLogoFill color="#2ba84a" style={{ fontSize: "1.4rem" }} />
-            Excel
-          </ButtonExcel>
-          <ButtonPDF onClick={exportToPDF}>
-            <FaRegFilePdf color="#f25c54" style={{ fontSize: "1rem" }} />
-            PDF
-          </ButtonPDF>
+          <LoginButton onClick={openModal}>Agregar Usuario</LoginButton>
+          <ExportButtons
+            data={usuarios}
+            columns={columns}
+            fileName="usuarios"
+            title="Reporte de Usuarios"
+            sheetName="Usuarios"
+            onExportStart={handleExportStart}
+            onExportEnd={handleExportEnd}
+          />
         </DateFile>
       </TopSection>
 
-      <Table columns={columns} data={usuarios} onDelete={eliminarUsuario} onEdit={editarUsuario} />
+      <Table
+        columns={columns}
+        data={usuarios}
+        onDelete={eliminarUsuario}
+        onEdit={editarUsuario}
+      />
 
       {showModal && (
         <ModalOverlay>
@@ -167,25 +230,94 @@ const Usuarios = () => {
             </ModalHeader>
             <ModalContent>
               <Form onSubmit={handleSubmit}>
-                {["nombre", "email", "telefono", "pais", "password", "ci"].map((field) => (
-                  <FormGroup key={field}>
-                    <Label>{field.charAt(0).toUpperCase() + field.slice(1)}</Label>
-                    <Input
-                      type={field === "email" ? "email" : "text"}
-                      name={field}
-                      value={form[field]}
-                      onChange={handleInputChange}
-                      required={field !== "ci"}
-                    />
-                  </FormGroup>
-                ))}
+                <FormGroup>
+                  <Label>Nombre Completo</Label>
+                  <Input
+                    type="text"
+                    name="nombre"
+                    value={form.nombre}
+                    onChange={handleInputChange}
+                    placeholder="Ej: Juan Pérez"
+                    required
+                  />
+                </FormGroup>
 
                 <FormGroup>
-                  <Label>Rol</Label>
-                  <Select name="rol" value={form.rol} onChange={handleInputChange} required>
-                    <option value="donante">Donante</option>
-                    <option value="voluntario">Voluntario</option>
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    name="email"
+                    value={form.email}
+                    onChange={handleInputChange}
+                    placeholder="ejemplo@correo.com"
+                    required
+                  />
+                </FormGroup>
+
+                <FormGroup>
+                  <Label>Teléfono</Label>
+                  <Input
+                    type="tel"
+                    name="telefono"
+                    value={form.telefono}
+                    onChange={handleInputChange}
+                    placeholder="Ej: 70123456"
+                    required
+                  />
+                </FormGroup>
+
+                <FormGroup>
+                  <Label>País</Label>
+                  <Input
+                    type="text"
+                    name="pais"
+                    value={form.pais}
+                    onChange={handleInputChange}
+                    placeholder="Ej: Bolivia"
+                    required
+                  />
+                </FormGroup>
+
+                <FormGroup>
+                  <Label>CI (Cédula de Identidad)</Label>
+                  <Input
+                    type="text"
+                    name="ci"
+                    value={form.ci}
+                    onChange={handleInputChange}
+                    placeholder="Ej: 1234567"
+                  />
+                </FormGroup>
+
+                <FormGroup>
+                  <Label>Contraseña {isEditing && "(dejar vacío para no cambiar)"}</Label>
+                  <Input
+                    type="password"
+                    name="password"
+                    value={form.password}
+                    onChange={handleInputChange}
+                    placeholder="Mínimo 6 caracteres"
+                    required={!isEditing}
+                    minLength="6"
+                  />
+                </FormGroup>
+
+                <FormGroup>
+                  <Label>Rol del Usuario</Label>
+                  <Select
+                    name="rol"
+                    value={form.rol}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="TRABAJADOR_SOCIAL">Trabajador Social</option>
+                    <option value="PSICOLOGO">Psicólogo</option>
+                    <option value="ADMINISTRADOR">Administrador</option>
+                    <option value="ASISTENTE">Asistente</option>
                   </Select>
+                  <HelpText>
+                    Solo se permiten estos 4 roles en el sistema
+                  </HelpText>
                 </FormGroup>
 
                 <ButtonGroup>
@@ -210,6 +342,7 @@ export default Usuarios;
 const Container = styled.div`
   padding: 20px;
 `;
+
 const Select = styled.select`
   width: 100%;
   padding: 0.5rem;
@@ -233,54 +366,17 @@ const DateFile = styled.div`
 `;
 
 const LoginButton = styled.button`
-  width: 100px;
-  height: 35px;
+  padding: 10px 20px;
   background-color: ${(props) => props.theme?.colors?.primary || "#FF6347"};
   color: white;
   border: none;
   border-radius: 6px;
-  font-size: 0.5;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.3s ease;
   &:hover {
     opacity: 0.9;
-  }
-`;
-
-const ButtonExcel = styled.button`
-  width: 70px;
-  height: 35px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  background: none;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-  color: #595959;
-  transition: 0.5s;
-  &:hover {
-    color: rgba(43, 168, 74, 0.63);
-  }
-`;
-
-const ButtonPDF = styled.button`
-  width: 70px;
-  height: 35px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  color: #595959;
-  transition: 0.5s;
-  &:hover {
-    color: rgba(242, 92, 84, 0.63);
   }
 `;
 
@@ -290,6 +386,7 @@ const TopSection = styled.div`
   align-items: center;
   margin-bottom: 20px;
 `;
+
 const ModalOverlay = styled.div`
   position: fixed;
   top: 0;
@@ -349,7 +446,6 @@ const FormGroup = styled.div`
   margin-bottom: 15px;
 `;
 
-
 const Label = styled.label`
   display: block;
   margin-bottom: 5px;
@@ -369,6 +465,14 @@ const Input = styled.input`
     outline: none;
     border-color: ${(props) => props.theme?.colors?.primary || "#FF6347"};
   }
+`;
+
+const HelpText = styled.small`
+  display: block;
+  margin-top: 5px;
+  color: #666;
+  font-size: 12px;
+  font-style: italic;
 `;
 
 const ButtonGroup = styled.div`

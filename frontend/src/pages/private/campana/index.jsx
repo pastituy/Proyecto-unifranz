@@ -5,20 +5,21 @@ import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
 import { IoCloseOutline } from "react-icons/io5";
 import Table from "../../../components/ui/table";
 import toast from "react-hot-toast";
+import ExportButtons from "../../../components/ui/ExportButtons";
 
 const Campanas = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [item, setItem] = useState({});
-    const isFetched = useRef(false);
-  
+  const isFetched = useRef(false);
+
   const [form, setForm] = useState({
     titulo: "",
     descripcion: "",
     fecha: "",
     multimedia: "",
-    recaudado:"",
-    previstro:""
+    recaudado: "",
+    previstro: "",
   });
   const [dataCampana, setDataCampana] = useState([]);
 
@@ -142,20 +143,27 @@ const Campanas = () => {
     { header: "Fecha", acceso: "fecha" },
     { header: "Multimedia", acceso: "multimedia" },
   ];
+  const handleExportStart = (type) => {
+    console.log(`Iniciando exportación: ${type}`);
+  };
 
+  const handleExportEnd = (type) => {
+    console.log(`Exportación completada: ${type}`);
+  };
   return (
     <Container>
       <TopSection>
         <DateFile>
           <LoginButton onClick={openModal}>Agregar</LoginButton>
-          <ButtonExcel onClick={exportToExcel}>
-            <PiMicrosoftExcelLogoFill color="#2ba84a" style={{ fontSize: "1.4rem" }} />
-            Excel
-          </ButtonExcel>
-          <ButtonPDF onClick={exportToPDF}>
-            <FaRegFilePdf color="#f25c54" style={{ fontSize: "1rem" }} />
-            PDF
-          </ButtonPDF>
+          <ExportButtons
+            data={dataCampana}
+            columns={columns}
+            fileName="campañas"
+            title="Reporte de campañas"
+            sheetName="Campañas"
+            onExportStart={handleExportStart}
+            onExportEnd={handleExportEnd}
+          />
         </DateFile>
       </TopSection>
 
@@ -238,8 +246,12 @@ const Campanas = () => {
                 </FormGroup>
 
                 <ButtonGroup>
-                  <CancelButton type="button" onClick={closeModal}>Cancelar</CancelButton>
-                  <SubmitButton type="submit">{isEditing ? "Actualizar" : "Guardar"}</SubmitButton>
+                  <CancelButton type="button" onClick={closeModal}>
+                    Cancelar
+                  </CancelButton>
+                  <SubmitButton type="submit">
+                    {isEditing ? "Actualizar" : "Guardar"}
+                  </SubmitButton>
                 </ButtonGroup>
               </Form>
             </ModalContent>
@@ -407,7 +419,6 @@ const Form = styled.form`
 const FormGroup = styled.div`
   margin-bottom: 15px;
 `;
-
 
 const Label = styled.label`
   display: block;

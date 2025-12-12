@@ -9,6 +9,7 @@ import Eventos from "./eventos";
 import CasosRecuperados from "./casosRecuperados";
 import Campanas from "./campanas";
 import Contact from "./contact";
+import EstadisticasDonaciones from "./estadisticasDonaciones";
 import Footer from "./footer";
 import OncoFelizChatbot from "../../components/chatbot";
 
@@ -76,6 +77,7 @@ const Layout = () => {
       <div id="contacto">
         <Contact />
       </div>
+      <EstadisticasDonaciones />
       <Footer scrollToSection={scrollToSection} />
     </Componentes>
   );

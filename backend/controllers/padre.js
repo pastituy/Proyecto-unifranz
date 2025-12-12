@@ -42,14 +42,21 @@ app.post("/padre", async (req, res) => {
       data: req.body,
     });
 
-    res.json({
+    res.status(201).json({
       mensaje: "padre creado correctamente",
       data: padreCreado,
     });
   } catch (error) {
+    console.error("Error al crear padre:", error);
+    if (error.code === "P2002") {
+      return res.status(400).json({
+        mensaje: "Error de validación",
+        error: "Ya existe un padre/tutor con este CI",
+      });
+    }
     res.status(500).json({
       mensaje: "Error al crear padre",
-      error: error.mensaje,
+      error: error.message,
     });
   }
 });

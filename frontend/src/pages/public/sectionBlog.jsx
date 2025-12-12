@@ -12,7 +12,7 @@ import {
   TitleAccent,
   BlogHeader
 } from '../../styles/styleSectionBlog';
-import { FaCalendarAlt, FaArrowLeft, FaShare, FaFacebook, FaTwitter, FaInstagram, FaReply } from 'react-icons/fa';
+import { FaCalendarAlt, FaArrowLeft, FaShare, FaFacebook, FaTwitter, FaInstagram, FaReply, FaArrowDown } from 'react-icons/fa';
 import axios from 'axios';
 import styled from 'styled-components';
 
@@ -134,7 +134,7 @@ const BlogSection = () => {
             <SectionTitle>Ultimas <TitleAccent>noticias</TitleAccent> & Historias</SectionTitle>
           </BlogHeader>
           <BlogGrid>
-            {blogPosts.slice(0, visiblePosts).map((post) => (
+            {blogPosts?.slice(0, visiblePosts).map((post) => (
               <BlogCard key={post.id}>
                 <BlogImage imageUrl={post.imagen}>
                   <BlogDate>{formatDate(post.fecha)}</BlogDate>
@@ -147,7 +147,7 @@ const BlogSection = () => {
           </BlogGrid>
           
           {/* Botón para cargar más noticias */}
-          {visiblePosts < blogPosts.length && (
+          {visiblePosts < blogPosts?.length && (
             <LoadMoreContainer>
               <LoadMoreButton onClick={loadMorePosts}>
                 Ver más noticias <FaArrowDown />
