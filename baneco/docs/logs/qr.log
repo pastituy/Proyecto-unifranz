@@ -1,0 +1,225 @@
+2025-12-12 20:40:27,699 - BanecoQR - INFO - ================================================================================
+2025-12-12 20:40:27,699 - BanecoQR - INFO - STARTING QR GENERATION DEMO
+2025-12-12 20:40:27,700 - BanecoQR - INFO - ================================================================================
+2025-12-12 20:40:27,700 - BanecoQR - INFO - ================================================================================
+2025-12-12 20:40:27,700 - BanecoQR - INFO - BanecoQRGenerator initialized
+2025-12-12 20:40:27,700 - BanecoQR - INFO - Base URL: https://apimktdesa.baneco.com.bo/ApiGateway
+2025-12-12 20:40:27,700 - BanecoQR - INFO - Username: 1649710
+2025-12-12 20:40:27,700 - BanecoQR - INFO - Account: 1041070599
+2025-12-12 20:40:27,700 - BanecoQR - INFO - ================================================================================
+2025-12-12 20:40:27,700 - BanecoQR - INFO - Generated transaction ID: TXN-20251212204027
+2025-12-12 20:40:27,700 - BanecoQR - INFO - No token available, authenticating...
+2025-12-12 20:40:27,700 - BanecoQR - INFO - Password not encrypted, encrypting now...
+2025-12-12 20:40:27,700 - BanecoQR - INFO - --- ENCRYPT REQUEST ---
+2025-12-12 20:40:27,700 - BanecoQR - INFO - URL: https://apimktdesa.baneco.com.bo/ApiGateway/api/authentication/encrypt
+2025-12-12 20:40:27,700 - BanecoQR - INFO - Params: text=***HIDDEN***, aesKey=6F09E3167E1D40829207B01041A65B12
+2025-12-12 20:40:28,255 - BanecoQR - INFO - Response Status: 200
+2025-12-12 20:40:28,255 - BanecoQR - INFO - Encrypted text: 6oV79y9jbrtZBSP/9SJR...
+2025-12-12 20:40:28,255 - BanecoQR - INFO - Encryption successful
+2025-12-12 20:40:28,255 - BanecoQR - INFO - --- AUTHENTICATE REQUEST ---
+2025-12-12 20:40:28,255 - BanecoQR - INFO - URL: https://apimktdesa.baneco.com.bo/ApiGateway/api/authentication/authenticate
+2025-12-12 20:40:28,255 - BanecoQR - INFO - Headers: {
+  "Content-Type": "application/json"
+}
+2025-12-12 20:40:28,255 - BanecoQR - INFO - Payload: {
+  "userName": "1649710",
+  "password": "***ENCRYPTED***"
+}
+2025-12-12 20:40:29,351 - BanecoQR - INFO - Response Status: 200
+2025-12-12 20:40:29,351 - BanecoQR - INFO - Response Data: {
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c3IiOiIxNjQ5NzEwIiwibmJmIjoxNzY1NTcyMDI5LCJleHAiOjE3NjU1NzM4MjksImlhdCI6MTc2NTU3MjAyOSwiaXNzIjoiYXBpLmJhbmVjby5jb20uYm8iLCJhdWQiOiJCYW5lY29DdXN0b21lcnMifQ.T3Txl6YXqa0ZSSSMUB_s6c9JNGxXkLfn5WTEDzl1Gzg",
+  "responseCode": 0,
+  "message": ""
+}
+2025-12-12 20:40:29,351 - BanecoQR - INFO - Token received: eyJhbGciOiJIUzI1NiIs...
+2025-12-12 20:40:29,352 - BanecoQR - INFO - Authentication successful
+2025-12-12 20:40:29,352 - BanecoQR - INFO - Account not encrypted, encrypting now...
+2025-12-12 20:40:29,352 - BanecoQR - INFO - --- ENCRYPT REQUEST ---
+2025-12-12 20:40:29,352 - BanecoQR - INFO - URL: https://apimktdesa.baneco.com.bo/ApiGateway/api/authentication/encrypt
+2025-12-12 20:40:29,352 - BanecoQR - INFO - Params: text=***HIDDEN***, aesKey=6F09E3167E1D40829207B01041A65B12
+2025-12-12 20:40:29,819 - BanecoQR - INFO - Response Status: 200
+2025-12-12 20:40:29,819 - BanecoQR - INFO - Encrypted text: vDMXnHByDJhGPuvtq1JL...
+2025-12-12 20:40:29,819 - BanecoQR - INFO - Encryption successful
+2025-12-12 20:40:29,819 - BanecoQR - INFO - No due date provided, using default: 2026-01-11
+2025-12-12 20:40:29,819 - BanecoQR - INFO - --- GENERATE QR REQUEST ---
+2025-12-12 20:40:29,819 - BanecoQR - INFO - URL: https://apimktdesa.baneco.com.bo/ApiGateway/api/qrsimple/generateQR
+2025-12-12 20:40:29,819 - BanecoQR - INFO - Headers: {
+  "Content-Type": "application/json",
+  "Authorization": "Bearer ***TOKEN***"
+}
+2025-12-12 20:40:29,819 - BanecoQR - INFO - Payload: {
+  "transactionId": "TXN-20251212204027",
+  "accountCredit": "***ENCRYPTED***",
+  "currency": "BOB",
+  "amount": 100.5,
+  "description": "Pago de demostraci\u00f3n - Unifranz",
+  "dueDate": "2026-01-11",
+  "singleUse": true,
+  "modifyAmount": false,
+  "branchCode": "E0001"
+}
+2025-12-12 20:40:31,576 - BanecoQR - INFO - Response Status: 200
+2025-12-12 20:40:31,576 - BanecoQR - INFO - Response Data: {
+  "qrId": "25121201016589000093",
+  "qrImage": "***BASE64_IMAGE_24500_CHARS***",
+  "responseCode": 0,
+  "message": ""
+}
+2025-12-12 20:40:31,576 - BanecoQR - INFO - QR generation successful
+2025-12-12 20:40:31,576 - BanecoQR - INFO - QR ID: 25121201016589000093
+2025-12-12 20:40:31,577 - BanecoQR - INFO - QR result saved to: qr_result_TXN-20251212204027.json
+2025-12-12 20:40:31,577 - BanecoQR - INFO - QR image saved to: qr_image_TXN-20251212204027.png
+2025-12-12 20:40:31,577 - BanecoQR - INFO - QR image size: 18373 bytes
+2025-12-12 20:40:31,577 - BanecoQR - INFO - ================================================================================
+2025-12-12 20:40:31,577 - BanecoQR - INFO - QR GENERATION DEMO COMPLETED SUCCESSFULLY
+2025-12-12 20:40:31,577 - BanecoQR - INFO - ================================================================================
+2025-12-12 20:44:37,937 - BanecoQR - INFO - ================================================================================
+2025-12-12 20:44:37,937 - BanecoQR - INFO - STARTING QR GENERATION DEMO
+2025-12-12 20:44:37,937 - BanecoQR - INFO - ================================================================================
+2025-12-12 20:44:37,937 - BanecoQR - INFO - ================================================================================
+2025-12-12 20:44:37,937 - BanecoQR - INFO - BanecoQRGenerator initialized
+2025-12-12 20:44:37,937 - BanecoQR - INFO - Base URL: https://apimktdesa.baneco.com.bo/ApiGateway
+2025-12-12 20:44:37,937 - BanecoQR - INFO - Username: 1649710
+2025-12-12 20:44:37,937 - BanecoQR - INFO - Account: 1041070599
+2025-12-12 20:44:37,937 - BanecoQR - INFO - ================================================================================
+2025-12-12 20:44:37,937 - BanecoQR - INFO - Generated transaction ID: TXN-20251212204437
+2025-12-12 20:44:37,937 - BanecoQR - INFO - No token available, authenticating...
+2025-12-12 20:44:37,937 - BanecoQR - INFO - Password not encrypted, encrypting now...
+2025-12-12 20:44:37,938 - BanecoQR - INFO - --- ENCRYPT REQUEST ---
+2025-12-12 20:44:37,938 - BanecoQR - INFO - URL: https://apimktdesa.baneco.com.bo/ApiGateway/api/authentication/encrypt
+2025-12-12 20:44:37,938 - BanecoQR - INFO - Params: text=***HIDDEN***, aesKey=6F09E3167E1D40829207B01041A65B12
+2025-12-12 20:44:38,438 - BanecoQR - INFO - Response Status: 200
+2025-12-12 20:44:38,439 - BanecoQR - INFO - Encrypted text: O2BexvVyE3I2Og+uB8Tb...
+2025-12-12 20:44:38,439 - BanecoQR - INFO - Encryption successful
+2025-12-12 20:44:38,439 - BanecoQR - INFO - --- AUTHENTICATE REQUEST ---
+2025-12-12 20:44:38,439 - BanecoQR - INFO - URL: https://apimktdesa.baneco.com.bo/ApiGateway/api/authentication/authenticate
+2025-12-12 20:44:38,439 - BanecoQR - INFO - Headers: {
+  "Content-Type": "application/json"
+}
+2025-12-12 20:44:38,439 - BanecoQR - INFO - Payload: {
+  "userName": "1649710",
+  "password": "***ENCRYPTED***"
+}
+2025-12-12 20:44:39,429 - BanecoQR - INFO - Response Status: 200
+2025-12-12 20:44:39,429 - BanecoQR - INFO - Response Data: {
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c3IiOiIxNjQ5NzEwIiwibmJmIjoxNzY1NTcyMjc5LCJleHAiOjE3NjU1NzQwNzksImlhdCI6MTc2NTU3MjI3OSwiaXNzIjoiYXBpLmJhbmVjby5jb20uYm8iLCJhdWQiOiJCYW5lY29DdXN0b21lcnMifQ.F_kOs6rMiO5cZ4jK3mNnMCVt_XNNOpIK0JlXWLx0nhw",
+  "responseCode": 0,
+  "message": ""
+}
+2025-12-12 20:44:39,429 - BanecoQR - INFO - Token received: eyJhbGciOiJIUzI1NiIs...
+2025-12-12 20:44:39,429 - BanecoQR - INFO - Authentication successful
+2025-12-12 20:44:39,429 - BanecoQR - INFO - Account not encrypted, encrypting now...
+2025-12-12 20:44:39,429 - BanecoQR - INFO - --- ENCRYPT REQUEST ---
+2025-12-12 20:44:39,429 - BanecoQR - INFO - URL: https://apimktdesa.baneco.com.bo/ApiGateway/api/authentication/encrypt
+2025-12-12 20:44:39,429 - BanecoQR - INFO - Params: text=***HIDDEN***, aesKey=6F09E3167E1D40829207B01041A65B12
+2025-12-12 20:44:39,903 - BanecoQR - INFO - Response Status: 200
+2025-12-12 20:44:39,903 - BanecoQR - INFO - Encrypted text: mrbYIR5vNWoYA5iNHfqI...
+2025-12-12 20:44:39,903 - BanecoQR - INFO - Encryption successful
+2025-12-12 20:44:39,903 - BanecoQR - INFO - No due date provided, using default: 2026-01-11
+2025-12-12 20:44:39,903 - BanecoQR - INFO - --- GENERATE QR REQUEST ---
+2025-12-12 20:44:39,903 - BanecoQR - INFO - URL: https://apimktdesa.baneco.com.bo/ApiGateway/api/qrsimple/generateQR
+2025-12-12 20:44:39,903 - BanecoQR - INFO - Headers: {
+  "Content-Type": "application/json",
+  "Authorization": "Bearer ***TOKEN***"
+}
+2025-12-12 20:44:39,903 - BanecoQR - INFO - Payload: {
+  "transactionId": "TXN-20251212204437",
+  "accountCredit": "***ENCRYPTED***",
+  "currency": "BOB",
+  "amount": 100.5,
+  "description": "Pago de demostraci\u00f3n - Unifranz",
+  "dueDate": "2026-01-11",
+  "singleUse": true,
+  "modifyAmount": false,
+  "branchCode": "E0001"
+}
+2025-12-12 20:44:41,806 - BanecoQR - INFO - Response Status: 200
+2025-12-12 20:44:41,807 - BanecoQR - INFO - Response Data: {
+  "qrId": "25121201016589000094",
+  "qrImage": "***BASE64_IMAGE_24136_CHARS***",
+  "responseCode": 0,
+  "message": ""
+}
+2025-12-12 20:44:41,807 - BanecoQR - INFO - QR generation successful
+2025-12-12 20:44:41,807 - BanecoQR - INFO - QR ID: 25121201016589000094
+2025-12-12 20:44:41,807 - BanecoQR - INFO - QR result saved to: /opt.cata/git/joss.unifranz/baneco/docs/logs/qr_result_TXN-20251212204437.json
+2025-12-12 20:44:41,807 - BanecoQR - INFO - QR image saved to: /opt.cata/git/joss.unifranz/baneco/docs/logs/qr_image_TXN-20251212204437.png
+2025-12-12 20:44:41,807 - BanecoQR - INFO - QR image size: 18100 bytes
+2025-12-12 20:44:41,807 - BanecoQR - INFO - ================================================================================
+2025-12-12 20:44:41,808 - BanecoQR - INFO - QR GENERATION DEMO COMPLETED SUCCESSFULLY
+2025-12-12 20:44:41,808 - BanecoQR - INFO - ================================================================================
+2025-12-12 20:45:24,257 - BanecoQR - INFO - ================================================================================
+2025-12-12 20:45:24,257 - BanecoQR - INFO - STARTING QR GENERATION DEMO
+2025-12-12 20:45:24,257 - BanecoQR - INFO - ================================================================================
+2025-12-12 20:45:24,257 - BanecoQR - INFO - ================================================================================
+2025-12-12 20:45:24,257 - BanecoQR - INFO - BanecoQRGenerator initialized
+2025-12-12 20:45:24,257 - BanecoQR - INFO - Base URL: https://apimktdesa.baneco.com.bo/ApiGateway
+2025-12-12 20:45:24,257 - BanecoQR - INFO - Username: 1649710
+2025-12-12 20:45:24,257 - BanecoQR - INFO - Account: 1041070599
+2025-12-12 20:45:24,257 - BanecoQR - INFO - ================================================================================
+2025-12-12 20:45:24,257 - BanecoQR - INFO - Generated transaction ID: TXN-20251212204524
+2025-12-12 20:45:24,257 - BanecoQR - INFO - No token available, authenticating...
+2025-12-12 20:45:24,257 - BanecoQR - INFO - Password not encrypted, encrypting now...
+2025-12-12 20:45:24,257 - BanecoQR - INFO - --- ENCRYPT REQUEST ---
+2025-12-12 20:45:24,257 - BanecoQR - INFO - URL: https://apimktdesa.baneco.com.bo/ApiGateway/api/authentication/encrypt
+2025-12-12 20:45:24,257 - BanecoQR - INFO - Params: text=***HIDDEN***, aesKey=6F09E3167E1D40829207B01041A65B12
+2025-12-12 20:45:24,807 - BanecoQR - INFO - Response Status: 200
+2025-12-12 20:45:24,807 - BanecoQR - INFO - Encrypted text: 1BlBucjmUDop/FqpVyKu...
+2025-12-12 20:45:24,807 - BanecoQR - INFO - Encryption successful
+2025-12-12 20:45:24,808 - BanecoQR - INFO - --- AUTHENTICATE REQUEST ---
+2025-12-12 20:45:24,808 - BanecoQR - INFO - URL: https://apimktdesa.baneco.com.bo/ApiGateway/api/authentication/authenticate
+2025-12-12 20:45:24,808 - BanecoQR - INFO - Headers: {
+  "Content-Type": "application/json"
+}
+2025-12-12 20:45:24,808 - BanecoQR - INFO - Payload: {
+  "userName": "1649710",
+  "password": "***ENCRYPTED***"
+}
+2025-12-12 20:45:25,486 - BanecoQR - INFO - Response Status: 200
+2025-12-12 20:45:25,486 - BanecoQR - INFO - Response Data: {
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c3IiOiIxNjQ5NzEwIiwibmJmIjoxNzY1NTcyMzI1LCJleHAiOjE3NjU1NzQxMjUsImlhdCI6MTc2NTU3MjMyNSwiaXNzIjoiYXBpLmJhbmVjby5jb20uYm8iLCJhdWQiOiJCYW5lY29DdXN0b21lcnMifQ.0k1HaQUFVu-zy0DApTz9XlAPMhcihmetGp2h0_X2dRc",
+  "responseCode": 0,
+  "message": ""
+}
+2025-12-12 20:45:25,486 - BanecoQR - INFO - Token received: eyJhbGciOiJIUzI1NiIs...
+2025-12-12 20:45:25,486 - BanecoQR - INFO - Authentication successful
+2025-12-12 20:45:25,486 - BanecoQR - INFO - Account not encrypted, encrypting now...
+2025-12-12 20:45:25,486 - BanecoQR - INFO - --- ENCRYPT REQUEST ---
+2025-12-12 20:45:25,486 - BanecoQR - INFO - URL: https://apimktdesa.baneco.com.bo/ApiGateway/api/authentication/encrypt
+2025-12-12 20:45:25,486 - BanecoQR - INFO - Params: text=***HIDDEN***, aesKey=6F09E3167E1D40829207B01041A65B12
+2025-12-12 20:45:25,954 - BanecoQR - INFO - Response Status: 200
+2025-12-12 20:45:25,955 - BanecoQR - INFO - Encrypted text: pFVK0PzhdNFOA7a/F5E9...
+2025-12-12 20:45:25,955 - BanecoQR - INFO - Encryption successful
+2025-12-12 20:45:25,955 - BanecoQR - INFO - No due date provided, using default: 2026-01-11
+2025-12-12 20:45:25,955 - BanecoQR - INFO - --- GENERATE QR REQUEST ---
+2025-12-12 20:45:25,955 - BanecoQR - INFO - URL: https://apimktdesa.baneco.com.bo/ApiGateway/api/qrsimple/generateQR
+2025-12-12 20:45:25,955 - BanecoQR - INFO - Headers: {
+  "Content-Type": "application/json",
+  "Authorization": "Bearer ***TOKEN***"
+}
+2025-12-12 20:45:25,955 - BanecoQR - INFO - Payload: {
+  "transactionId": "TXN-20251212204524",
+  "accountCredit": "***ENCRYPTED***",
+  "currency": "BOB",
+  "amount": 100.5,
+  "description": "Pago de demostraci\u00f3n - Unifranz",
+  "dueDate": "2026-01-11",
+  "singleUse": true,
+  "modifyAmount": false,
+  "branchCode": "E0001"
+}
+2025-12-12 20:45:27,181 - BanecoQR - INFO - Response Status: 200
+2025-12-12 20:45:27,181 - BanecoQR - INFO - Response Data: {
+  "qrId": "25121201016589000095",
+  "qrImage": "***BASE64_IMAGE_24584_CHARS***",
+  "responseCode": 0,
+  "message": ""
+}
+2025-12-12 20:45:27,182 - BanecoQR - INFO - QR generation successful
+2025-12-12 20:45:27,182 - BanecoQR - INFO - QR ID: 25121201016589000095
+2025-12-12 20:45:27,182 - BanecoQR - INFO - QR result saved to: /opt.cata/git/joss.unifranz/baneco/docs/logs/qr_result_TXN-20251212204524.json
+2025-12-12 20:45:27,183 - BanecoQR - INFO - QR image saved to: /opt.cata/git/joss.unifranz/baneco/docs/logs/qr_image_TXN-20251212204524.png
+2025-12-12 20:45:27,183 - BanecoQR - INFO - QR image size: 18437 bytes
+2025-12-12 20:45:27,183 - BanecoQR - INFO - ================================================================================
+2025-12-12 20:45:27,183 - BanecoQR - INFO - QR GENERATION DEMO COMPLETED SUCCESSFULLY
+2025-12-12 20:45:27,183 - BanecoQR - INFO - ================================================================================

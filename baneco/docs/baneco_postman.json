@@ -1,0 +1,461 @@
+{
+    "info": {
+        "_postman_id": "ca877384-5ec3-40d7-96f0-9de789920df2",
+        "name": "BANCO ECONÓMICO – API Market v1.3.0 (Full)",
+        "description": "Colección completa de endpoints según especificaciones v1.3.0.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "17270357",
+        "_collection_link": "https://lively-zodiac-176827.postman.co/workspace/DEVOPS~53eac288-afa5-43d3-b143-042622e8d4ae/collection/17270357-ca877384-5ec3-40d7-96f0-9de789920df2?action=share&source=collection_link&creator=17270357"
+    },
+    "item": [
+        {
+            "name": "Encriptación",
+            "item": [
+                {
+                    "name": "Encrypt",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/authentication/encrypt?text={{textToEncrypt}}&aesKey={{aesKey}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "authentication",
+                                "encrypt"
+                            ],
+                            "query": [
+                                {
+                                    "key": "text",
+                                    "value": "{{textToEncrypt}}"
+                                },
+                                {
+                                    "key": "aesKey",
+                                    "value": "{{aesKey}}"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Decrypt",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/authentication/decrypt?text={{textToDecrypt}}&aesKey={{aesKey}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "authentication",
+                                "decrypt"
+                            ],
+                            "query": [
+                                {
+                                    "key": "text",
+                                    "value": "{{textToDecrypt}}"
+                                },
+                                {
+                                    "key": "aesKey",
+                                    "value": "{{aesKey}}"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Autenticación",
+            "item": [
+                {
+                    "name": "Authenticate",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "let res={};",
+                                    "try{res=pm.response.json();}catch(e){}",
+                                    "if(res && res.token){",
+                                    "  pm.environment.set('token', res.token);",
+                                    "  console.log('Token (env) =>', res.token);",
+                                    "} else {",
+                                    "  console.warn('No se encontró token en la respuesta');",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"userName\": \"{{userName}}\",\n  \"password\": \"{{passwordEnc}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/authentication/authenticate",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "authentication",
+                                "authenticate"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Pagos QR",
+            "item": [
+                {
+                    "name": "Generar QR",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"transactionId\": \"123456789\",\n  \"accountCredit\": \"{{accountCreditEnc}}\",\n  \"currency\": \"BOB\",\n  \"amount\": 1.2,\n  \"description\": \"Ejemplo\",\n  \"dueDate\": \"2025-12-31\",\n  \"singleUse\": true,\n  \"modifyAmount\": false,\n  \"branchCode\": \"E0001\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/qrsimple/generateQR",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "qrsimple",
+                                "generateQR"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Anular QR",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{ \"qrId\": \"21061401016000000003\" }"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/qrsimple/cancelQR",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "qrsimple",
+                                "cancelQR"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Estado QR",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/qrsimple/v2/statusQR/{{qrId}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "qrsimple",
+                                "v2",
+                                "statusQR",
+                                "{{qrId}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Notificación Pago QR",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"payment\": {\n    \"qrId\":\"{{qrId}}\",\n    \"transactionId\":\"3161056\",\n    \"paymentDate\":\"2025-01-01T00:00:00\",\n    \"paymentTime\":\"15:00:27\",\n    \"currency\":\"USD\",\n    \"amount\":1.2,\n    \"senderBankCode\":\"1016\",\n    \"senderName\":\"CLIENTE\",\n    \"senderDocumentId\":\"0\",\n    \"senderAccount\":\"******5691\",\n    \"description\":\"Ejemplo\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/qrsimple/notifyPaymentQR",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "qrsimple",
+                                "notifyPaymentQR"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Lista QR pagados",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/qrsimple/v2/paidQR/{{fecha}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "qrsimple",
+                                "v2",
+                                "paidQR",
+                                "{{fecha}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Cuentas",
+            "item": [
+                {
+                    "name": "Consulta Movimientos",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{ \"accountCode\": \"{{accountCreditEnc}}\", \"startDate\":\"2025-01-15\", \"endDate\":\"2025-01-20\" }"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/accounts/history",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "accounts",
+                                "history"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Planillas de pagos",
+            "item": [
+                {
+                    "name": "Carga planilla",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"batchId\":\"BATCH-001\",\n  \"type\":\"PROVIDERS\",\n  \"descripction\":\"Pago proveedores\",\n  \"detailedDebit\":true,\n  \"accountCode\":\"{{accountCreditEnc}}\",\n  \"batchCurrency\":\"BOB\",\n  \"batchAmount\":1000.0,\n  \"AMLData\":{\"AMLSource\":\"Ventas\",\"AMLDestination\":\"Proveedores\"},\n  \"paymentCount\":1,\n  \"paymentList\":[{\n    \"batchDetailId\":\"DET-001\",\n    \"amount\":1000.0,\n    \"accountCode\":\"1234567890\",\n    \"accountTypeCode\":\"CCAD\",\n    \"bankCode\":\"1016\",\n    \"beneficiaryName\":\"Proveedor SRL\"\n  }]\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/batchPayment/upload",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "batchPayment",
+                                "upload"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Notificar estado planilla",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"bankBatchId\":1002003,\n  \"batchId\":\"BATCH-001\",\n  \"batchDetailId\":\"DET-001\",\n  \"status\":\"ACEP\",\n  \"transactionIdDebit\":5555,\n  \"transactionIdCredit\":\"TRX-001\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/notifyStatus",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "notifyStatus"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "// Pre-request a nivel colección: genera passwordEnc y accountCreditEnc usando el endpoint /encrypt",
+                    "const base = pm.environment.get('base_url') || pm.collectionVariables.get('base_url');",
+                    "const aes = pm.environment.get('aesKey') || pm.collectionVariables.get('aesKey');",
+                    "const plainPwd = pm.environment.get('passwordPlain') || pm.collectionVariables.get('passwordPlain');",
+                    "const plainAcc = pm.environment.get('accountPlain') || pm.collectionVariables.get('accountPlain');",
+                    "",
+                    "// helper para llamar encrypt sincrónico anidado (Postman sendRequest es async)",
+                    "function doEncrypt(text, cb){",
+                    "  if (!base || !aes || !text){ return cb(null); }",
+                    "  const url = `${base}/api/authentication/encrypt?text=${encodeURIComponent(text)}&aesKey=${encodeURIComponent(aes)}`;",
+                    "  pm.sendRequest({url, method:'GET'}, (err, res)=> {",
+                    "    if (err || res.code !== 200) return cb(null);",
+                    "    cb(res.text());",
+                    "  });",
+                    "}",
+                    "",
+                    "// Si falta passwordEnc, calcularlo",
+                    "if (!pm.environment.get('passwordEnc') && plainPwd) {",
+                    "  doEncrypt(plainPwd, (enc)=> { if (enc) pm.environment.set('passwordEnc', enc); });",
+                    "}",
+                    "",
+                    "// Si falta accountCreditEnc, calcularlo",
+                    "if (!pm.environment.get('accountCreditEnc') && plainAcc) {",
+                    "  doEncrypt(plainAcc, (enc)=> { if (enc) pm.environment.set('accountCreditEnc', enc); });",
+                    "}"
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "https://apimktdesa.baneco.com.bo/ApiGateway"
+        },
+        {
+            "key": "userName",
+            "value": "1649710"
+        },
+        {
+            "key": "passwordPlain",
+            "value": "1234"
+        },
+        {
+            "key": "aesKey",
+            "value": "6F09E3167E1D40829207B01041A65B12"
+        },
+        {
+            "key": "accountPlain",
+            "value": "1041070599"
+        },
+        {
+            "key": "passwordEnc",
+            "value": ""
+        },
+        {
+            "key": "accountCreditEnc",
+            "value": ""
+        },
+        {
+            "key": "token",
+            "value": ""
+        },
+        {
+            "key": "qrId",
+            "value": "21061401016000000003"
+        },
+        {
+            "key": "fecha",
+            "value": "20250101"
+        },
+        {
+            "key": "textToEncrypt",
+            "value": "1234"
+        },
+        {
+            "key": "textToDecrypt",
+            "value": ""
+        }
+    ]
+}
