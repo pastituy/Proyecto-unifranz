@@ -2,12 +2,10 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { IoSend } from "react-icons/io5";
 import toast from "react-hot-toast";
-import BlogPreview from "./components/blogPreview";
-
-const API_KEY =
-  "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";
+import { useUser } from "../../../context/userContext";
 
 const CancerNewsChat = () => {
+  const { token } = useUser();
   const [question, setQuestion] = useState("");
   const [responses, setResponses] = useState(() => {
     const saved = localStorage.getItem("cancer-chat");
@@ -100,16 +98,15 @@ const CancerNewsChat = () => {
   setLoading(true);
 
   try {
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    // Llamar al backend en lugar de OpenRouter directamente
+    const res = await fetch("http://localhost:3000/api/ai/generate", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${API_KEY}`,
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:5173",
       },
       body: JSON.stringify({
         model: "openai/chatgpt-4o-latest",
-        max_tokens: 1000, // 👈 Limitar respuesta para evitar error de créditos
         messages: [
           {
             role: "system",
@@ -170,12 +167,21 @@ Extrae la información del mensaje del usuario para completar los campos.`,
     });
 
     const data = await res.json();
-    if (!data.choices) {
-      toast.error("No se obtuvo respuesta del modelo.");
+
+    // Manejar errores del backend
+    if (!data.success) {
+      toast.error(data.mensaje || "Error al generar contenido");
+      setLoading(false);
       return;
     }
 
-    const botMessage = data.choices[0].message.content.trim();
+    if (!data.data || !data.data.content) {
+      toast.error("No se obtuvo respuesta del modelo.");
+      setLoading(false);
+      return;
+    }
+
+    const botMessage = data.data.content.trim();
 
     let parsed;
     let tipo = "";
@@ -338,11 +344,7 @@ Extrae la información del mensaje del usuario para completar los campos.`,
 
                     return (
                       <MessageContent key={i}>
-                        {parsed && parsed.titulo && parsed.contenidos ? (
-                          <BlogPreview blog={parsed} />
-                        ) : (
-                          <ResponseText>{text}</ResponseText>
-                        )}
+                        <ResponseText>{text}</ResponseText>
                       </MessageContent>
                     );
                   })}

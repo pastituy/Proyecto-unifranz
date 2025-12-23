@@ -10,7 +10,6 @@ import weekOfYear from 'dayjs/plugin/weekOfYear';
 import ExportButtons from "../../../components/ui/ExportButtons";
 import QRCode from "qrcode";
 
-// Configurar plugins de dayjs
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(weekOfYear);
@@ -23,14 +22,13 @@ const Donaciones = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [item, setItem] = useState({});
+  const [campanas, setCampanas] = useState([]);
 
-  // Estados para filtros de tiempo
-  const [filtroTiempo, setFiltroTiempo] = useState('mes'); // dia, semana, mes, ano, personalizado
+  const [filtroTiempo, setFiltroTiempo] = useState('mes');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
 
-  // Estados para el flujo de pago
-  const [paymentStep, setPaymentStep] = useState('amount'); // amount, qr, processing, success, error
+  const [paymentStep, setPaymentStep] = useState('amount');
   const [qrData, setQrData] = useState(null);
   const [qrImage, setQrImage] = useState('');
   const [transactionId, setTransactionId] = useState('');
@@ -42,7 +40,8 @@ const Donaciones = () => {
     metodoPago: "QR",
     fecha: new Date().toISOString().split('T')[0],
     numeroTransaccion: "",
-    banco: "Banco Simulado"
+    banco: "Banco Simulado",
+    idCampana: ""
   });
 
   const handleInputChange = (e) => {
@@ -62,7 +61,6 @@ const Donaciones = () => {
       setDonaciones(data.data);
       setDonacionesFiltradas(data.data);
 
-      // Calcular total del mes
       const mesActual = new Date().getMonth();
       const total = data.data.reduce((acc, don) => {
         const fecha = new Date(don.fecha);
@@ -77,7 +75,21 @@ const Donaciones = () => {
     }
   };
 
-  // Función para aplicar filtros de tiempo
+  const getCampanas = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/campana");
+      const data = await response.json();
+      if (!response.ok) {
+        toast.error(data.mensaje || "Error al obtener campañas");
+        return;
+      }
+      setCampanas(data.data || []);
+    } catch (error) {
+      console.error("Error al obtener campañas:", error);
+      toast.error("Hubo un problema al obtener las campañas");
+    }
+  };
+
   const aplicarFiltro = () => {
     let donacionesFiltradas = [...donaciones];
     const hoy = dayjs();
@@ -121,7 +133,6 @@ const Donaciones = () => {
         donacionesFiltradas = donaciones;
     }
 
-    // Calcular total de donaciones filtradas
     const total = donacionesFiltradas.reduce((acc, don) =>
       acc + parseFloat(don.cantidad), 0
     );
@@ -132,23 +143,20 @@ const Donaciones = () => {
 
   useEffect(() => {
     getData();
+    getCampanas();
   }, []);
 
-  // Aplicar filtro cuando cambian los valores
   useEffect(() => {
     aplicarFiltro();
   }, [filtroTiempo, fechaInicio, fechaFin, donaciones]);
 
   useEffect(() => {
-    // Escuchar confirmaciones de pago desde el simulador bancario
     const handlePaymentConfirmed = (event) => {
       const confirmation = event.detail;
 
-      // Verificar si esta transacción coincide con la actual
       if (confirmation.transactionId === transactionId && paymentStep === 'qr') {
         console.log('[Donaciones] Pago confirmado desde banco simulador:', confirmation);
 
-        // Cambiar a estado de procesamiento y luego a éxito
         setPaymentStep('processing');
 
         setTimeout(() => {
@@ -158,10 +166,8 @@ const Donaciones = () => {
       }
     };
 
-    // Suscribirse al evento
     window.addEventListener('paymentConfirmed', handlePaymentConfirmed);
 
-    // Limpiar al desmontar
     return () => {
       window.removeEventListener('paymentConfirmed', handlePaymentConfirmed);
     };
@@ -174,7 +180,8 @@ const Donaciones = () => {
       metodoPago: "QR",
       fecha: new Date().toISOString().split('T')[0],
       numeroTransaccion: "",
-      banco: "Banco Nacional de Bolivia"
+      banco: "Banco Nacional de Bolivia",
+      idCampana: ""
     });
     setItem({});
     setPaymentStep('amount');
@@ -185,7 +192,6 @@ const Donaciones = () => {
       clearTimeout(paymentTimer);
       setPaymentTimer(null);
     }
-    // Limpiar el intervalo de verificación de pago
     if (window.paymentCheckInterval) {
       clearInterval(window.paymentCheckInterval);
       window.paymentCheckInterval = null;
@@ -210,7 +216,8 @@ const Donaciones = () => {
       metodoPago: data.metodoPago || "QR",
       fecha: data.fecha ? dayjs(data.fecha).format('YYYY-MM-DD') : new Date().toISOString().split('T')[0],
       numeroTransaccion: data.numeroTransaccion || "",
-      banco: data.banco || "Banco Simulado"
+      banco: data.banco || "Banco Simulado",
+      idCampana: data.idCampana || ""
     });
     setItem(data);
     setIsEditing(true);
@@ -236,7 +243,6 @@ const Donaciones = () => {
     }
   };
 
-  // Generar QR usando la API del BNB
   const generateQR = async () => {
     if (!form.nombreDonante || !form.cantidad) {
       toast.error("Por favor complete nombre y cantidad");
@@ -252,7 +258,6 @@ const Donaciones = () => {
     try {
       toast.loading("Generando código QR con el BNB...");
 
-      // Llamar al backend para generar QR con el BNB
       const response = await fetch('http://localhost:3000/api/bnb/generate-qr', {
         method: 'POST',
         headers: {
@@ -272,10 +277,8 @@ const Donaciones = () => {
         throw new Error(result.message || 'Error al generar código QR');
       }
 
-      // El BNB devuelve la imagen en base64
       const qrImageUrl = `data:image/png;base64,${result.data.qrImage}`;
 
-      // Datos del QR para mostrar en la interfaz
       const qrPayload = {
         transactionId: result.data.transactionId,
         qrId: result.data.qrId,
@@ -293,13 +296,11 @@ const Donaciones = () => {
       setQrImage(qrImageUrl);
       setTransactionId(result.data.transactionId);
 
-      // Guardar qrId del BNB para verificar el estado después
       window.bnbQrId = result.data.qrId;
 
       setPaymentStep('qr');
       toast.success("Código QR generado exitosamente");
 
-      // Iniciar verificación periódica del estado del pago
       startPaymentStatusCheck(result.data.qrId);
     } catch (error) {
       toast.dismiss();
@@ -386,7 +387,8 @@ const Donaciones = () => {
       ...form,
       numeroTransaccion: transactionId,
       banco: qrData.bank,
-      metodoPago: "QR"
+      metodoPago: "QR",
+      idCampana: form.idCampana ? parseInt(form.idCampana) : null
     };
 
     try {
@@ -596,6 +598,25 @@ const Donaciones = () => {
                     />
                   </FormGroup>
 
+                  <FormGroup>
+                    <Label>Campaña (Opcional)</Label>
+                    <Select
+                      name="idCampana"
+                      value={form.idCampana}
+                      onChange={handleInputChange}
+                    >
+                      <option value="">Sin campaña específica</option>
+                      {campanas.map((campana) => (
+                        <option key={campana.id} value={campana.id}>
+                          {campana.titulo}
+                        </option>
+                      ))}
+                    </Select>
+                    <InfoText>
+                      Selecciona una campaña si esta donación es para una causa específica
+                    </InfoText>
+                  </FormGroup>
+
                   <InfoBox style={{ background: '#e8f5e9', borderLeftColor: '#4caf50' }}>
                     <strong>🔒 Pasarela de Pago Segura</strong><br />
                     Se generará un código QR único para esta transacción.
@@ -641,24 +662,11 @@ const Donaciones = () => {
                   </PaymentDetails>
 
                   <InfoBox style={{ background: '#fff3e0', borderLeftColor: '#ff9800' }}>
-                    <strong>📱 Instrucciones para pago real:</strong><br />
-                    1. Abre tu app bancaria<br />
+                    <strong>📱 Pasos para completar tu donación:</strong><br />
+                    1. Abre tu aplicación bancaria<br />
                     2. Escanea este código QR<br />
-                    3. Confirma el pago en tu app<br />
-                    4. Espera la confirmación<br />
-                    <br />
-                    <strong>🧪 O prueba con el simulador:</strong><br />
-                    <a
-                      href="/banco-simulador"
-                      target="_blank"
-                      style={{
-                        color: '#ff9800',
-                        fontWeight: 'bold',
-                        textDecoration: 'underline'
-                      }}
-                    >
-                      Abrir Simulador de Banco →
-                    </a>
+                    3. Confirma el pago en tu banco<br />
+                    4. Espera la confirmación automática
                   </InfoBox>
 
                   <SimulationBox>
@@ -804,6 +812,22 @@ const Donaciones = () => {
                       min="0"
                       required
                     />
+                  </FormGroup>
+
+                  <FormGroup>
+                    <Label>Campaña (Opcional)</Label>
+                    <Select
+                      name="idCampana"
+                      value={form.idCampana}
+                      onChange={handleInputChange}
+                    >
+                      <option value="">Sin campaña específica</option>
+                      {campanas.map((campana) => (
+                        <option key={campana.id} value={campana.id}>
+                          {campana.titulo}
+                        </option>
+                      ))}
+                    </Select>
                   </FormGroup>
 
                   <FormGroup>
@@ -1012,6 +1036,29 @@ const Input = styled.input`
   }
 `;
 
+const Select = styled.select`
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+  background-color: white;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+`;
+
+const InfoText = styled.p`
+  font-size: 12px;
+  color: #666;
+  margin-top: 6px;
+  font-style: italic;
+`;
+
 const InfoBox = styled.div`
   background-color: #f0f8ff;
   border-left: 4px solid #2196F3;
@@ -1088,7 +1135,7 @@ const QRImage = styled.img`
 const DownloadQRButton = styled.button`
   width: 100%;
   padding: 12px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: ${(props) => props.theme?.colors?.primary || "#FF6347"};
   color: white;
   border: none;
   border-radius: 8px;
@@ -1105,7 +1152,7 @@ const DownloadQRButton = styled.button`
   &:hover {
     opacity: 0.9;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(255, 99, 71, 0.4);
   }
 
   &:active {

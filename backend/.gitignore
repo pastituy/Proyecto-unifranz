@@ -5,7 +5,5 @@ node_modules
 .env.local
 .env.production
 
-# Documentación de seguridad (contiene información sensible)
-CONFIGURACION_RAPIDA.md
-IMPLEMENTACION_SEGURIDAD.md
-MIGRACION_MVC.md
+# Documentación (contiene información sensible del proyecto)
+documentos/

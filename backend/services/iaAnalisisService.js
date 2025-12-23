@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const pdfParse = require('pdf-parse');
 
-const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_KEY = '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';
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 /**
@@ -170,7 +170,7 @@ RESPONDE ÚNICAMENTE CON UN OBJETO JSON en este formato exacto:
           }
         ],
         temperature: 0.3, // Baja temperatura para respuestas más consistentes
-        max_tokens: 1000
+        max_tokens: 800
       })
     });
 
@@ -356,7 +356,7 @@ INSTRUCCIONES:
           }
         ],
         temperature: 0.4,
-        max_tokens: 2000
+        max_tokens: 1000
       })
     });
 

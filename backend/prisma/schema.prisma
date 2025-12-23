@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,25 +8,24 @@ datasource db {
 }
 
 model Usuario {
-  id                           Int                       @id @default(autoincrement())
-  nombre                       String
-  email                        String                    @unique
-  telefono                     String
-  pais                         String
-  password                     String
-  creadoEn                     DateTime                  @default(now())
-  ci                           String?
-  rol                          Rol?
-  usuarioCompana               UsuarioCompana[]
-  registrosCreados             PacienteRegistro[]        @relation("CreadorRegistro")
-  evaluacionesSociales         EvaluacionSocial[]
-  evaluacionesPsicologicas     EvaluacionPsicologica[]
-  casosAceptados               Beneficiario[]            @relation("AceptadoPor")
-  beneficiariosAsignados       Beneficiario[]            @relation("AsignadoA")
-  ayudasRegistradas            Ayuda[]
-  solicitudesCreadas           SolicitudAyuda[]          @relation("SolicitadoPor")
-  solicitudesRevisadas         SolicitudAyuda[]          @relation("RevisadoPor")
-  notificaciones               Notificacion[]
+  id                     Int                @id @default(autoincrement())
+  nombre                 String
+  email                  String             @unique
+  telefono               String
+  pais                   String
+  password               String
+  creadoEn               DateTime           @default(now())
+  ci                     String?
+  rol                    Rol?
+  usuarioCompana         UsuarioCompana[]
+  ayudasRegistradas      Ayuda[]
+  casosAceptados         Beneficiario[]     @relation("AceptadoPor")
+  beneficiariosAsignados Beneficiario[]     @relation("AsignadoA")
+  evaluacionesSociales   EvaluacionSocial[]
+  notificaciones         Notificacion[]
+  registrosCreados       PacienteRegistro[] @relation("CreadorRegistro")
+  solicitudesRevisadas   SolicitudAyuda[]   @relation("RevisadoPor")
+  solicitudesCreadas     SolicitudAyuda[]   @relation("SolicitadoPor")
 }
 
 model Donaciones {
@@ -41,6 +34,8 @@ model Donaciones {
   cantidad      String
   metodoPago    String
   descripcion   String?
+  idCampana     Int?
+  campana       Campana? @relation(fields: [idCampana], references: [id])
   fecha         DateTime @default(now())
 }
 
@@ -59,11 +54,11 @@ model Paciente {
   nombre        String
   apellido      String
   ciudad        String
-  tipoCancer    String //manejar por le frontend los casos
+  tipoCancer    String
   edad          Int
   idPadre       Int
-  padre         Padre         @relation(fields: [idPadre], references: [id])
   fechaRegistro DateTime      @default(now())
+  padre         Padre         @relation(fields: [idPadre], references: [id])
   Recuperados   Recuperados[]
   Tratamiento   Tratamiento[]
 }
@@ -71,24 +66,24 @@ model Paciente {
 model Recuperados {
   id         Int      @id @default(autoincrement())
   idPaciente Int
-  paciente   Paciente @relation(fields: [idPaciente], references: [id])
   diagnosis  String
   image      String
   quote      String
   recovered  String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  paciente   Paciente @relation(fields: [idPaciente], references: [id])
 }
 
 model Tratamiento {
-  id              Int      @id @default(autoincrement())
+  id              Int       @id @default(autoincrement())
   tipoTratamiento String
   descripcion     String
   idPaciente      Int?
-  estado          Boolean //si esta activo o no 
-  fecha           DateTime @default(now())
+  estado          Boolean
+  fecha           DateTime  @default(now())
   siguienteCita   DateTime
-  paciente   Paciente? @relation(fields: [idPaciente], references: [id])
+  paciente        Paciente? @relation(fields: [idPaciente], references: [id])
 }
 
 model Evento {
@@ -96,8 +91,8 @@ model Evento {
   titulo      String
   descripcion String
   fecha       String
-  img         String
   ubicacion   String
+  img         String
 }
 
 model Campana {
@@ -105,9 +100,10 @@ model Campana {
   titulo         String
   descripcion    String
   fecha          String
-  multimedia     String //imagenes o videos aqui
+  multimedia     String
   recaudado      Decimal?
   previstro      Decimal?
+  donaciones     Donaciones[]
   usuarioCompana UsuarioCompana[]
 }
 
@@ -122,59 +118,200 @@ model UsuarioCompana {
   Usuario          Usuario? @relation(fields: [idUsuario], references: [id])
 }
 
-model Categoria {
-  id     Int    @id @default(autoincrement())
-  nombre String //proceso niños, recuperacion niños, informacion basica beneficiarion, casos del niño
-  blog   Blog[]
+model PacienteRegistro {
+  id                  Int               @id @default(autoincrement())
+  nombreCompletoNino  String
+  fechaNacimiento     DateTime
+  edad                Int
+  ciNino              String?
+  diagnostico         String
+  nombreCompletoTutor String
+  ciTutor             String
+  parentesco          String
+  telefonoTutor       String
+  direccion           String
+  emailTutor          String?
+  estado              EstadoRegistro    @default(REGISTRO_INICIAL)
+  motivoRechazo       String?
+  creadoPorId         Int
+  creadoPor           Usuario           @relation("CreadorRegistro", fields: [creadoPorId], references: [id])
+  fechaRegistro       DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  evaluacionSocial    EvaluacionSocial?
+  beneficiario        Beneficiario?
+
+  @@map("pacientes_registro")
 }
 
-model Blog {
-  id          Int           @id @default(autoincrement())
-  titulo      String?
-  excerpt     String?
-  fecha       DateTime      @default(now())
-  autor       String?
-  imagen      String?
-  idCategoria Int?
-  categoria   Categoria?    @relation(fields: [idCategoria], references: [id])
-  contenidos  Contenido[]
-  tags        Tag[]
-  comentarios Comentarios[]
+model EvaluacionSocial {
+  id                     Int                 @id @default(autoincrement())
+  pacienteRegistroId     Int                 @unique
+  ingresoFamiliar        Int
+  numPersonasHogar       Int
+  tipoVivienda           Int
+  situacionLaboralPadres Int
+  accesoSalud            Int
+  gastosMedicosMensuales Int
+  puntajeTotal           Int
+  nivelVulnerabilidad    NivelVulnerabilidad
+  informeSocialPdf       String?
+  trabajadorSocialId     Int
+  fechaEvaluacion        DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  observaciones          String?
+  pacienteRegistro       PacienteRegistro    @relation(fields: [pacienteRegistroId], references: [id], onDelete: Cascade)
+  trabajadorSocial       Usuario             @relation(fields: [trabajadorSocialId], references: [id])
+
+  @@map("evaluaciones_sociales")
 }
 
-model Contenido {
-  id     Int    @id @default(autoincrement())
-  titulo String
-  texto  String @db.Text
-  orden  Int
-  blogId Int
-  blog   Blog   @relation(fields: [blogId], references: [id], onDelete: Cascade)
+model Beneficiario {
+  id                          Int                   @id @default(autoincrement())
+  pacienteRegistroId          Int                   @unique
+  codigoBeneficiario          String                @unique
+  estadoBeneficiario          EstadoBeneficiario    @default(ACTIVO)
+  estadoMedico                EstadoMedico          @default(EN_TRATAMIENTO)
+  fechaAceptacion             DateTime              @default(now())
+  aceptadoPorId               Int
+  asignadoAId                 Int?
+  historiaClinica             String?               @unique
+  fechaPrimerContacto         DateTime?
+  nombreMedicoTratante        String?
+  especialidadMedico          String?
+  telefonoMedico              String?
+  institucionMedica           String?
+  faseTratamiento             FaseTratamiento?
+  semanaProtocolo             Int?
+  esquemaTratamiento          String?
+  ultimaFechaControl          DateTime?
+  proximaFechaControl         DateTime?
+  frecuenciaControl           String?
+  fechaInicioVigilancia       DateTime?
+  tiempoVigilanciaAnios       Int?
+  fechaUltimaAsistencia       DateTime?
+  motivoAbandono              String?
+  notificadoDefensoria        Boolean               @default(false)
+  fechaNotificacionDefensoria DateTime?
+  fechaFallecimiento          DateTime?
+  causaFallecimiento          String?
+  alergiasMedicamentos        String?
+  complicaciones              String?
+  observacionesMedicas        String?
+  updatedAt                   DateTime              @updatedAt
+  ayudas                      Ayuda[]
+  aceptadoPor                 Usuario               @relation("AceptadoPor", fields: [aceptadoPorId], references: [id])
+  asignadoA                   Usuario?              @relation("AsignadoA", fields: [asignadoAId], references: [id])
+  pacienteRegistro            PacienteRegistro      @relation(fields: [pacienteRegistroId], references: [id], onDelete: Cascade)
+  sesionesQuimioterapia       SesionQuimioterapia[]
+  solicitudesAyuda            SolicitudAyuda[]
+
+  @@map("beneficiarios")
 }
 
-model Tag {
-  id     Int    @id @default(autoincrement())
-  nombre String @unique
-  blogs  Blog[]
+model Ayuda {
+  id               Int          @id @default(autoincrement())
+  beneficiarioId   Int
+  fechaAyuda       DateTime     @default(now())
+  medicamentos     Decimal      @default(0)
+  analisisExamenes Decimal      @default(0)
+  quimioterapia    Decimal      @default(0)
+  transporte       Decimal      @default(0)
+  alimentacion     Decimal      @default(0)
+  otros            Decimal      @default(0)
+  totalAyuda       Decimal
+  observaciones    String?
+  registradoPorId  Int
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  beneficiario     Beneficiario @relation(fields: [beneficiarioId], references: [id], onDelete: Cascade)
+  registradoPor    Usuario      @relation(fields: [registradoPorId], references: [id])
+
+  @@map("ayudas")
 }
 
-model Comentarios {
-  id         Int         @id @default(autoincrement())
-  comentario String
-  idBlog     Int
-  blog       Blog        @relation(fields: [idBlog], references: [id])
-  respuesta  respuesta[]
+model SesionQuimioterapia {
+  id              Int                @id @default(autoincrement())
+  beneficiarioId  Int
+  numeroSesion    Int
+  fechaProgramada DateTime
+  fechaRealizada  DateTime?
+  estado          EstadoSesionQuimio @default(PROGRAMADA)
+  observaciones   String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  beneficiario    Beneficiario       @relation(fields: [beneficiarioId], references: [id], onDelete: Cascade)
+
+  @@map("sesiones_quimioterapia")
 }
 
-model respuesta {
-  id           Int         @id @default(autoincrement())
-  respuesta    String
-  idComentario Int
-  comentario   Comentarios @relation(fields: [idComentario], references: [id])
+model SolicitudAyuda {
+  id                   Int                @id @default(autoincrement())
+  codigoSolicitud      String             @unique
+  beneficiarioId       Int
+  solicitadoPorId      Int
+  fechaSolicitud       DateTime           @default(now())
+  prioridad            PrioridadSolicitud @default(MEDIA)
+  tipoAyuda            TipoAyuda
+  numeroReceta         String?
+  fechaReceta          DateTime?
+  medicoPrescriptor    String?
+  recetaPdf            String?
+  detalleSolicitud     String
+  costoEstimado        Decimal?
+  observaciones        String?
+  estado               EstadoSolicitud    @default(PENDIENTE)
+  revisadoPorId        Int?
+  fechaRevision        DateTime?
+  motivoRechazo        String?
+  fechaEntrega         DateTime?
+  lugarEntrega         String?
+  costoReal            Decimal?
+  proveedor            String?
+  facturaPdf           String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  instruccionesEntrega String?
+  montoAprobado        Decimal?
+  beneficiario         Beneficiario       @relation(fields: [beneficiarioId], references: [id], onDelete: Cascade)
+  revisadoPor          Usuario?           @relation("RevisadoPor", fields: [revisadoPorId], references: [id])
+  solicitadoPor        Usuario            @relation("SolicitadoPor", fields: [solicitadoPorId], references: [id])
+
+  @@map("solicitudes_ayuda")
 }
 
-// ================================
-// ENUMS SISTEMA DE USUARIOS
-// ================================
+model Notificacion {
+  id                Int       @id @default(autoincrement())
+  usuarioId         Int
+  emailDestinatario String?
+  tipo              String
+  prioridad         String    @default("normal")
+  titulo            String
+  mensaje           String
+  relacionadoTipo   String?
+  relacionadoId     Int?
+  leida             Boolean   @default(false)
+  fechaLeida        DateTime?
+  emailEnviado      Boolean   @default(false)
+  fechaEmailEnviado DateTime?
+  createdAt         DateTime  @default(now())
+  usuario           Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("notificaciones")
+}
+
+model CodigoVerificacion {
+  id        Int      @id @default(autoincrement())
+  email     String
+  codigo    String
+  usado     Boolean  @default(false)
+  expiraEn  DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email, codigo])
+  @@map("codigos_verificacion")
+}
+
 enum Rol {
   ADMINISTRADOR
   PSICOLOGO
@@ -183,12 +320,8 @@ enum Rol {
   BENEFICIARIO
 }
 
-// ================================
-// ENUMS SISTEMA DE BENEFICIARIOS
-// ================================
 enum EstadoRegistro {
   REGISTRO_INICIAL
-  PENDIENTE_EVALUACION_PSICOLOGICA
   EN_EVALUACION_ADMINISTRADOR
   BENEFICIARIO_ACTIVO
   CASO_RECHAZADO
@@ -249,246 +382,4 @@ enum EstadoSolicitud {
   RECEPCIONADO
   ENTREGADO
   RECHAZADO
-}
-
-// ================================
-// REGISTRO INICIAL DE PACIENTES
-// ================================
-model PacienteRegistro {
-  id                  Int             @id @default(autoincrement())
-  nombreCompletoNino  String
-  fechaNacimiento     DateTime
-  edad                Int
-  ciNino              String?
-  diagnostico         String
-  nombreCompletoTutor String
-  ciTutor             String
-  parentesco          String
-  telefonoTutor       String
-  direccion           String
-  emailTutor          String?
-  estado              EstadoRegistro  @default(REGISTRO_INICIAL)
-  motivoRechazo       String?
-  creadoPorId         Int
-  creadoPor           Usuario         @relation("CreadorRegistro", fields: [creadoPorId], references: [id])
-  fechaRegistro       DateTime        @default(now())
-  updatedAt           DateTime        @updatedAt
-
-  evaluacionSocial      EvaluacionSocial?
-  evaluacionPsicologica EvaluacionPsicologica?
-  beneficiario          Beneficiario?
-
-  @@map("pacientes_registro")
-}
-
-// ================================
-// EVALUACIÓN SOCIAL
-// ================================
-model EvaluacionSocial {
-  id                    Int                 @id @default(autoincrement())
-  pacienteRegistroId    Int                 @unique
-  ingresoFamiliar       Int
-  numPersonasHogar      Int
-  tipoVivienda          Int
-  situacionLaboralPadres Int
-  accesoSalud           Int
-  gastosMedicosMensuales Int
-  puntajeTotal          Int
-  nivelVulnerabilidad   NivelVulnerabilidad
-  informeSocialPdf      String?
-  observaciones         String?             @db.Text
-  trabajadorSocialId    Int
-  trabajadorSocial      Usuario             @relation(fields: [trabajadorSocialId], references: [id])
-  fechaEvaluacion       DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
-
-  pacienteRegistro PacienteRegistro @relation(fields: [pacienteRegistroId], references: [id], onDelete: Cascade)
-
-  @@map("evaluaciones_sociales")
-}
-
-// ================================
-// EVALUACIÓN PSICOLÓGICA
-// ================================
-model EvaluacionPsicologica {
-  id                     Int      @id @default(autoincrement())
-  pacienteRegistroId     Int      @unique
-  informePsicologicoPdf  String?
-  observaciones          String?
-  psicologoId            Int
-  psicologo              Usuario  @relation(fields: [psicologoId], references: [id])
-  fechaEvaluacion        DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-
-  pacienteRegistro PacienteRegistro @relation(fields: [pacienteRegistroId], references: [id], onDelete: Cascade)
-
-  @@map("evaluaciones_psicologicas")
-}
-
-// ================================
-// BENEFICIARIOS
-// ================================
-model Beneficiario {
-  id                  Int                @id @default(autoincrement())
-  pacienteRegistroId  Int                @unique
-  codigoBeneficiario  String             @unique
-  estadoBeneficiario  EstadoBeneficiario @default(ACTIVO)
-  estadoMedico        EstadoMedico       @default(EN_TRATAMIENTO)
-  fechaAceptacion     DateTime           @default(now())
-  aceptadoPorId       Int
-  aceptadoPor         Usuario            @relation("AceptadoPor", fields: [aceptadoPorId], references: [id])
-  asignadoAId         Int?
-  asignadoA           Usuario?           @relation("AsignadoA", fields: [asignadoAId], references: [id])
-  historiaClinica           String?       @unique
-  fechaPrimerContacto       DateTime?
-  nombreMedicoTratante      String?
-  especialidadMedico        String?
-  telefonoMedico            String?
-  institucionMedica         String?
-  faseTratamiento           FaseTratamiento?
-  semanaProtocolo           Int?
-  esquemaTratamiento        String?
-  ultimaFechaControl        DateTime?
-  proximaFechaControl       DateTime?
-  frecuenciaControl         String?
-  fechaInicioVigilancia     DateTime?
-  tiempoVigilanciaAnios     Int?
-  fechaUltimaAsistencia     DateTime?
-  motivoAbandono            String?
-  notificadoDefensoria      Boolean       @default(false)
-  fechaNotificacionDefensoria DateTime?
-  fechaFallecimiento        DateTime?
-  causaFallecimiento        String?
-  alergiasMedicamentos      String?
-  complicaciones            String?
-  observacionesMedicas      String?       @db.Text
-  updatedAt           DateTime           @updatedAt
-
-  pacienteRegistro     PacienteRegistro     @relation(fields: [pacienteRegistroId], references: [id], onDelete: Cascade)
-  ayudas               Ayuda[]
-  sesionesQuimioterapia SesionQuimioterapia[]
-  solicitudesAyuda     SolicitudAyuda[]
-
-  @@map("beneficiarios")
-}
-
-// ================================
-// AYUDAS
-// ================================
-model Ayuda {
-  id              Int      @id @default(autoincrement())
-  beneficiarioId  Int
-  fechaAyuda      DateTime @default(now())
-  medicamentos    Decimal  @default(0)
-  analisisExamenes Decimal @default(0)
-  quimioterapia   Decimal  @default(0)
-  transporte      Decimal  @default(0)
-  alimentacion    Decimal  @default(0)
-  otros           Decimal  @default(0)
-  totalAyuda      Decimal
-  observaciones   String?
-  registradoPorId Int
-  registradoPor   Usuario  @relation(fields: [registradoPorId], references: [id])
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  beneficiario Beneficiario @relation(fields: [beneficiarioId], references: [id], onDelete: Cascade)
-
-  @@map("ayudas")
-}
-
-// ================================
-// SESIONES DE QUIMIOTERAPIA
-// ================================
-model SesionQuimioterapia {
-  id               Int                @id @default(autoincrement())
-  beneficiarioId   Int
-  numeroSesion     Int
-  fechaProgramada  DateTime
-  fechaRealizada   DateTime?
-  estado           EstadoSesionQuimio @default(PROGRAMADA)
-  observaciones    String?
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-
-  beneficiario Beneficiario @relation(fields: [beneficiarioId], references: [id], onDelete: Cascade)
-
-  @@map("sesiones_quimioterapia")
-}
-
-// ================================
-// SOLICITUDES DE AYUDA
-// ================================
-model SolicitudAyuda {
-  id                    Int                 @id @default(autoincrement())
-  codigoSolicitud       String              @unique
-  beneficiarioId        Int
-  solicitadoPorId       Int
-  solicitadoPor         Usuario             @relation("SolicitadoPor", fields: [solicitadoPorId], references: [id])
-  fechaSolicitud        DateTime            @default(now())
-  prioridad             PrioridadSolicitud  @default(MEDIA)
-  tipoAyuda             TipoAyuda
-  numeroReceta          String?
-  fechaReceta           DateTime?
-  medicoPrescriptor     String?
-  recetaPdf             String?
-  detalleSolicitud      String
-  costoEstimado         Decimal?
-  observaciones         String?
-  estado                EstadoSolicitud     @default(PENDIENTE)
-  revisadoPorId         Int?
-  revisadoPor           Usuario?            @relation("RevisadoPor", fields: [revisadoPorId], references: [id])
-  fechaRevision         DateTime?
-  montoAprobado         Decimal?
-  motivoRechazo         String?
-  fechaEntrega          DateTime?
-  instruccionesEntrega  String?
-  lugarEntrega          String?
-  costoReal             Decimal?
-  proveedor             String?
-  facturaPdf            String?
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
-
-  beneficiario          Beneficiario        @relation(fields: [beneficiarioId], references: [id], onDelete: Cascade)
-
-  @@map("solicitudes_ayuda")
-}
-
-// ================================
-// NOTIFICACIONES
-// ================================
-model Notificacion {
-  id                  Int      @id @default(autoincrement())
-  usuarioId           Int
-  usuario             Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  emailDestinatario   String?
-  tipo                String   // beneficiario_aceptado, solicitud_aprobada, solicitud_rechazada, etc.
-  prioridad           String   @default("normal") // normal, alta, urgente
-  titulo              String
-  mensaje             String   @db.Text
-  relacionadoTipo     String?  // beneficiario, solicitud
-  relacionadoId       Int?
-  leida               Boolean  @default(false)
-  fechaLeida          DateTime?
-  emailEnviado        Boolean  @default(false)
-  fechaEmailEnviado   DateTime?
-  createdAt           DateTime @default(now())
-
-  @@map("notificaciones")
-}
-
-// ================================
-// CÓDIGOS DE VERIFICACIÓN 2FA
-// ================================
-model CodigoVerificacion {
-  id          Int      @id @default(autoincrement())
-  email       String
-  codigo      String
-  usado       Boolean  @default(false)
-  expiraEn    DateTime
-  createdAt   DateTime @default(now())
-
-  @@map("codigos_verificacion")
-  @@index([email, codigo])
 }

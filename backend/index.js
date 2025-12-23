@@ -29,11 +29,7 @@ const Donaciones = require("./controllers/donaciones");
 const Evento = require("./controllers/evento");
 const Paciente = require("./controllers/paciente");
 const Padre = require("./controllers/padre");
-const blog = require("./controllers/blog");
 const campana = require("./controllers/campana");
-const categoria = require("./controllers/categoria");
-const comentarios = require("./controllers/comentarios");
-const respuesta = require("./controllers/respuesta");
 const usuarioCompana = require("./controllers/usuarioCompana");
 const login = require("./controllers/login");
 const facebook = require("./controllers/facebook");
@@ -154,6 +150,10 @@ app.get("/health", (req, res) => {
 // ✅ Autenticación - MIGRADO
 app.use("/api/auth", authRoutes);
 
+// ✅ IA (OpenRouter) - NUEVO
+const aiRoutes = require("./routes/ai.routes");
+app.use("/api/ai", aiRoutes);
+
 // Pendientes de migración:
 // app.use("/api/donaciones", donacionesRoutes);
 // app.use("/api/pacientes", pacientesRoutes);
@@ -193,12 +193,8 @@ app.use(SolicitudesAyuda);
 app.use(Notificaciones);
 app.use(Reportes);
 
-// Blog y campañas
-app.use(blog);
+// Campañas
 app.use(campana);
-app.use(categoria);
-app.use(comentarios);
-app.use(respuesta);
 app.use(usuarioCompana);
 
 // Mobile

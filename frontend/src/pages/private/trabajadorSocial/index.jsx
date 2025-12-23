@@ -288,12 +288,12 @@ const TrabajoSocial = () => {
   };
 
   const handleSolicitarEvaluacion = async (registroId) => {
-    if (!window.confirm("¿Desea enviar este caso a evaluación psicológica?")) return;
+    if (!window.confirm("¿Desea enviar este caso a revisión del administrador?")) return;
 
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`${API_URL}/solicitar-evaluacion-psicologica/${registroId}`, {
+      const response = await fetch(`${API_URL}/enviar-a-administrador/${registroId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -309,7 +309,7 @@ const TrabajoSocial = () => {
       console.log("===============================");
 
       if (data.success) {
-        setSuccess("Caso enviado a evaluación psicológica exitosamente");
+        setSuccess("Caso enviado a revisión del administrador exitosamente");
         fetchRegistros();
         setTimeout(() => setSuccess(""), 3000);
       } else {
@@ -317,7 +317,7 @@ const TrabajoSocial = () => {
         console.error("Error en derivación:", data);
       }
     } catch (err) {
-      console.error("Error al solicitar evaluación:", err);
+      console.error("Error al enviar a administrador:", err);
       setError("Error de conexión: " + err.message);
     } finally {
       setLoading(false);
@@ -560,7 +560,7 @@ const TrabajoSocial = () => {
                           )}
                           {registro.estado === "REGISTRO_INICIAL" && registro.evaluacionSocial && (
                             <IconButton onClick={() => handleSolicitarEvaluacion(registro.id)}>
-                              <FaPaperPlane title="Enviar a Psicología" />
+                              <FaPaperPlane title="Enviar a Administrador" />
                             </IconButton>
                           )}
                           {registro.evaluacionSocial?.informeSocialPdf && (

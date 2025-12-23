@@ -22,9 +22,10 @@ app.get("/donaciones", async (req, res) => {
       mensaje: "donaciones obtenidos correctamente",
     });
   } catch (error) {
+    console.error("Error al obtener donaciones:", error);
     res.status(500).json({
       mensaje: "Error al traer donaciones",
-      error: error.mensaje,
+      error: error.message,
     });
   }
 });
@@ -133,9 +134,10 @@ app.get("/donaciones/:id", async (req, res) => {
       mensaje: "donaciones obtenidos correctamente",
     });
   } catch (error) {
+    console.error("Error al obtener donación:", error);
     res.status(500).json({
       mensaje: "Error al traer donaciones",
-      error: error.mensaje,
+      error: error.message,
     });
   }
 });
@@ -168,9 +170,10 @@ app.post("/donaciones", async (req, res) => {
       data: donacionesCreado,
     });
   } catch (error) {
+    console.error("Error al crear donación:", error);
     res.status(500).json({
       mensaje: "Error al crear donaciones",
-      error: error.mensaje,
+      error: error.message,
     });
   }
 });
@@ -187,9 +190,10 @@ app.put("/donaciones/:id", async (req, res) => {
       data: donaciones,
     });
   } catch (error) {
+    console.error("Error al editar donación:", error);
     res.status(500).json({
       mensaje: "Error al editar donaciones",
-      error: error.mensaje,
+      error: error.message,
     });
   }
 });
@@ -204,9 +208,10 @@ app.delete("/donaciones/:id", async (req, res) => {
       mensaje: "donaciones eliminado correctamente",
     });
   } catch (error) {
+    console.error("Error al eliminar donación:", error);
     res.status(500).json({
       mensaje: "Error al eliminar donaciones",
-      error: error.mensaje,
+      error: error.message,
     });
   }
 });

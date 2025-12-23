@@ -51,11 +51,6 @@ const Sidebar = () => {
           text: "Campañas",
         },
         {
-          path: "/dasboard/noticias",
-          icon: <FaNewspaper />,
-          text: "Noticias",
-        },
-        {
           path: "/dasboard/usuario",
           icon: <FaUserPlus />,
           text: "Usuarios",
