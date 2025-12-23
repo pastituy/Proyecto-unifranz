@@ -13,7 +13,6 @@ const Nav = () => {
     const path = location.pathname;
     if (path.includes("eventos")) return "Eventos";
     if (path.includes("campana")) return "Campañas";
-    if (path.includes("noticias")) return "Noticias";
     if (path.includes("usuario")) return "Usuarios";
     if (path.includes("donaciones")) return "Donaciones";
     if (path.includes("paciente")) return "Pacientes";

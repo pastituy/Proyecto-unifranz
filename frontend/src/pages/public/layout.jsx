@@ -4,7 +4,6 @@ import { useState } from "react";
 import styled from "styled-components";
 import Navbar from "./navbar";
 import HeroSection from "./heroSection";
-import BlogSection from "./sectionBlog";
 import Eventos from "./eventos";
 import CasosRecuperados from "./casosRecuperados";
 import Campanas from "./campanas";
@@ -33,10 +32,6 @@ const Layout = () => {
       link: "inicio",
     },
     {
-      name: "Blog",
-      link: "blog",
-    },
-    {
       name: "Casos",
       link: "casos",
     },
@@ -61,9 +56,6 @@ const Layout = () => {
       <Navbar navLinks={NavLinkes} scrollToSection={scrollToSection} />
       <div id="inicio">
         <HeroSection />
-      </div>
-      <div id="blog">
-        <BlogSection />
       </div>
       <div id="eventos">
         <Eventos />

@@ -10,7 +10,6 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LayoutAdmin from "./pages/private/layout";
 import Events from "./pages/private/eventos";
 import Camp from "./pages/private/campana";
-import Noticias from "./pages/private/noticias";
 import Usuario from "./pages/private/usuario";
 import Donaciones from "./pages/private/donaciones";
 import CancerNewsChat from "./pages/private/chat";
@@ -62,7 +61,6 @@ const AppContent = () => {
       <ThemeProvider theme={theme}>
         {/*<Navbar />
       <HeroSection />
-      <BlogSection />
       <Eventos />
       <CasosRecuperados />
       <Campanas />
@@ -114,14 +112,6 @@ const AppContent = () => {
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
                     <Camp />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dasboard/noticias"
-                element={
-                  <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
-                    <Noticias />
                   </ProtectedRoute>
                 }
               />

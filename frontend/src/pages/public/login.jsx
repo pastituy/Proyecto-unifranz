@@ -11,17 +11,12 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleRegisterClick = (e) => {
-    e.preventDefault();
-    navigate("/register");
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3000/login", {
+      const response = await fetch("http://localhost:3000/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -116,13 +111,6 @@ const Login = () => {
             <LoginButton type="submit" disabled={loading}>
               {loading ? "Iniciando sesión..." : "Iniciar sesión"}
             </LoginButton>
-
-            <SignUpSection>
-              <SignUpText>¿No tienes una cuenta?</SignUpText>
-              <SignUpLink href="#" onClick={handleRegisterClick}>
-                Crear cuenta nueva
-              </SignUpLink>
-            </SignUpSection>
           </Form>
         </LoginContent>
       </LoginCard>
@@ -250,26 +238,5 @@ const LoginButton = styled.button`
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-  }
-`;
-
-const SignUpSection = styled.div`
-  text-align: center;
-  margin-top: 1.5rem;
-`;
-
-const SignUpText = styled.span`
-  font-size: 0.9rem;
-  color: #666;
-`;
-
-const SignUpLink = styled.a`
-  color: ${(props) => props.theme?.colors?.primary || "#FF6347"};
-  text-decoration: none;
-  margin-left: 0.25rem;
-  font-weight: 500;
-
-  &:hover {
-    text-decoration: underline;
   }
 `;

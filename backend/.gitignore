@@ -1,3 +1,9 @@
 node_modules
-# Keep environment variables out of version control
+
+# Variables de entorno (NUNCA subir)
 .env
+.env.local
+.env.production
+
+# Documentación (contiene información sensible del proyecto)
+documentos/

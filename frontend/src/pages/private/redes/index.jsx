@@ -261,7 +261,7 @@ const PLATFORMS = {
 };
 
 // API Key para OpenRouter (la misma del asistente)
-const OPENROUTER_API_KEY = "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";
+const OPENROUTER_API_KEY = "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";
 
 const Redes = () => {
   const [messages, setMessages] = useState([]);
@@ -336,7 +336,7 @@ No uses comillas al inicio ni al final del mensaje.`
         },
         body: JSON.stringify({
           model: "openai/chatgpt-4o-latest",
-          max_tokens: 500,
+          max_tokens: 400,
           messages: [
             {
               role: "system",

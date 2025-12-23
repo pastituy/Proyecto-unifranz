@@ -418,14 +418,6 @@ const DonateModal = ({ isOpen, onClose, selectedAmount }) => {
                 </ol>
               </QRInstructions>
 
-              <BankSimulatorLink
-                href="/banco-simulador"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                📱 Abrir Simulador de Banco →
-              </BankSimulatorLink>
-
               <TestingPanel>
                 <TestingTitle>🧪 Modo de Pruebas</TestingTitle>
                 <TestingButtons>
@@ -955,7 +947,7 @@ const QRDisplayContainer = styled.div`
 const DownloadQRButton = styled.button`
   width: 100%;
   padding: 12px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #FF6347;
   color: white;
   border: none;
   border-radius: 8px;
@@ -972,7 +964,7 @@ const DownloadQRButton = styled.button`
   &:hover {
     opacity: 0.9;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(255, 99, 71, 0.4);
   }
 `;
 

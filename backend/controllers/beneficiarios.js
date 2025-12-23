@@ -222,7 +222,6 @@ app.delete("/paciente-registro/:id", async (req, res) => {
       where: { id: parseInt(id) },
       include: {
         evaluacionSocial: true,
-        evaluacionPsicologica: true,
         beneficiario: true
       }
     });
@@ -269,7 +268,6 @@ app.get("/mis-registros/:trabajadorId", async (req, res) => {
       where,
       include: {
         evaluacionSocial: true,
-        evaluacionPsicologica: true,
       },
       orderBy: { fechaRegistro: "desc" },
     });
@@ -449,7 +447,13 @@ app.post("/evaluacion-social", upload.single("informeSocialPdf"), async (req, re
   }
 });
 
-// Solicitar evaluación psicológica (cambiar estado)
+// ================================
+// ENDPOINTS DESHABILITADOS - EVALUACIÓN PSICOLÓGICA
+// ================================
+// El psicólogo ya no participa en el flujo de evaluación
+// Solo el trabajador social sube informe social (obligatorio)
+
+/* ENDPOINT DESHABILITADO - Solicitar evaluación psicológica
 app.put("/solicitar-evaluacion-psicologica/:registroId", async (req, res) => {
   try {
     const { registroId } = req.params;
@@ -487,12 +491,9 @@ app.put("/solicitar-evaluacion-psicologica/:registroId", async (req, res) => {
     res.status(500).json({ success: false, mensaje: "Error al solicitar evaluación", error: error.message });
   }
 });
+*/
 
-// ================================
-// PSICÓLOGO - ENDPOINTS
-// ================================
-
-// Obtener casos pendientes de evaluación psicológica
+/* ENDPOINT DESHABILITADO - Obtener casos pendientes de evaluación psicológica
 app.get("/casos-pendientes-psicologia", async (req, res) => {
   try {
     const casos = await prisma.pacienteRegistro.findMany({
@@ -521,8 +522,58 @@ app.get("/casos-pendientes-psicologia", async (req, res) => {
     res.status(500).json({ mensaje: "Error al obtener casos", error: error.message });
   }
 });
+*/
 
-// Crear evaluación psicológica
+// ================================
+// ENVIAR CASO A ADMINISTRADOR (NUEVO FLUJO)
+// ================================
+// Después de la evaluación social, el caso va directo al administrador
+app.put("/enviar-a-administrador/:registroId", async (req, res) => {
+  try {
+    const { registroId } = req.params;
+
+    // Verificar que tenga evaluación social completa
+    const registro = await prisma.pacienteRegistro.findUnique({
+      where: { id: parseInt(registroId) },
+      include: { evaluacionSocial: true },
+    });
+
+    if (!registro) {
+      return res.status(404).json({ success: false, mensaje: "Registro no encontrado" });
+    }
+
+    if (!registro.evaluacionSocial) {
+      return res.status(400).json({ success: false, mensaje: "Debe completar la evaluación social primero" });
+    }
+
+    if (!registro.evaluacionSocial.informeSocialPdf) {
+      return res.status(400).json({ success: false, mensaje: "Debe subir el informe social PDF" });
+    }
+
+    // Cambiar estado a EN_EVALUACION_ADMINISTRADOR
+    const actualizado = await prisma.pacienteRegistro.update({
+      where: { id: parseInt(registroId) },
+      data: { estado: "EN_EVALUACION_ADMINISTRADOR" },
+    });
+
+    res.json({
+      success: true,
+      data: actualizado,
+      mensaje: "Caso enviado a revisión del administrador exitosamente",
+    });
+  } catch (error) {
+    console.error("Error al enviar a administrador:", error);
+    res.status(500).json({ success: false, mensaje: "Error al enviar el caso", error: error.message });
+  }
+});
+
+// ================================
+// EVALUACIÓN PSICOLÓGICA - DESHABILITADO
+// ================================
+// El psicólogo ya no participa en el flujo de evaluación
+// Solo el trabajador social sube informe social (obligatorio)
+
+/* ENDPOINT DESHABILITADO - El psicólogo no sube informes en el nuevo flujo
 app.post("/evaluacion-psicologica", upload.single("informePsicologicoPdf"), async (req, res) => {
   try {
     console.log("=== INICIO EVALUACIÓN PSICOLÓGICA ===");
@@ -531,7 +582,6 @@ app.post("/evaluacion-psicologica", upload.single("informePsicologicoPdf"), asyn
 
     const { pacienteRegistroId, observaciones, psicologoId } = req.body;
 
-    // Verificar si ya existe una evaluación psicológica para este registro
     const evaluacionExistente = await prisma.evaluacionPsicologica.findUnique({
       where: { pacienteRegistroId: parseInt(pacienteRegistroId) }
     });
@@ -540,7 +590,6 @@ app.post("/evaluacion-psicologica", upload.single("informePsicologicoPdf"), asyn
 
     let evaluacion;
     if (evaluacionExistente) {
-      // Actualizar la evaluación existente
       evaluacion = await prisma.evaluacionPsicologica.update({
         where: { pacienteRegistroId: parseInt(pacienteRegistroId) },
         data: {
@@ -551,7 +600,6 @@ app.post("/evaluacion-psicologica", upload.single("informePsicologicoPdf"), asyn
         },
       });
     } else {
-      // Crear nueva evaluación
       evaluacion = await prisma.evaluacionPsicologica.create({
         data: {
           pacienteRegistroId: parseInt(pacienteRegistroId),
@@ -562,7 +610,6 @@ app.post("/evaluacion-psicologica", upload.single("informePsicologicoPdf"), asyn
       });
     }
 
-    // Actualizar estado del registro
     await prisma.pacienteRegistro.update({
       where: { id: parseInt(pacienteRegistroId) },
       data: { estado: "EN_EVALUACION_ADMINISTRADOR" },
@@ -582,27 +629,31 @@ app.post("/evaluacion-psicologica", upload.single("informePsicologicoPdf"), asyn
     });
   }
 });
+*/
 
 // ================================
 // ADMINISTRADOR - ENDPOINTS
 // ================================
 
-// Obtener casos en evaluación (con ambos informes)
+// Obtener casos en evaluación (solo con informe social)
 app.get("/casos-en-evaluacion", async (req, res) => {
   try {
+    console.log("=== OBTENIENDO CASOS EN EVALUACIÓN ===");
     const casos = await prisma.pacienteRegistro.findMany({
       where: { estado: "EN_EVALUACION_ADMINISTRADOR" },
       include: {
         evaluacionSocial: true,
-        evaluacionPsicologica: true,
         creadoPor: { select: { nombre: true } },
       },
       orderBy: { fechaRegistro: "asc" },
     });
 
+    console.log("Casos encontrados:", casos.length);
+    console.log("Casos:", casos.map(c => ({ id: c.id, nombre: c.nombreCompletoNino, estado: c.estado })));
+
     res.json({ success: true, data: casos, mensaje: "Casos obtenidos correctamente" });
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error al obtener casos:", error);
     res.status(500).json({ success: false, mensaje: "Error al obtener casos", error: error.message });
   }
 });
@@ -711,8 +762,7 @@ app.put("/aceptar-caso/:registroId", async (req, res) => {
     const registro = await prisma.pacienteRegistro.findUnique({
       where: { id: parseInt(registroId) },
       include: {
-        evaluacionSocial: true,
-        evaluacionPsicologica: true
+        evaluacionSocial: true
       }
     });
 
@@ -775,21 +825,7 @@ app.put("/aceptar-caso/:registroId", async (req, res) => {
           })
         );
       }
-      if (registro.evaluacionPsicologica) {
-        notificaciones.push(
-          tx.notificacion.create({
-            data: {
-              usuarioId: registro.evaluacionPsicologica.psicologoId,
-              tipo: "beneficiario_aceptado",
-              prioridad: "alta",
-              titulo: "✅ Caso Aceptado",
-              mensaje: `El caso de ${registro.nombreCompletoNino} ha sido aceptado. Código: ${codigoBeneficiario}`,
-              relacionadoTipo: "beneficiario",
-              relacionadoId: beneficiario.id
-            }
-          })
-        );
-      }
+      // Notificación al psicólogo removida - ya no participa en evaluaciones
       await Promise.all(notificaciones);
       return beneficiario;
     });
@@ -1220,13 +1256,13 @@ app.get("/estadisticas", async (req, res) => {
   try {
     const [
       totalRegistros,
-      pendientesPsicologia,
+      registrosIniciales,
       enEvaluacion,
       beneficiariosActivos,
       casosRechazados,
     ] = await Promise.all([
       prisma.pacienteRegistro.count(),
-      prisma.pacienteRegistro.count({ where: { estado: "PENDIENTE_EVALUACION_PSICOLOGICA" } }),
+      prisma.pacienteRegistro.count({ where: { estado: "REGISTRO_INICIAL" } }),
       prisma.pacienteRegistro.count({ where: { estado: "EN_EVALUACION_ADMINISTRADOR" } }),
       prisma.beneficiario.count({ where: { estadoBeneficiario: "ACTIVO" } }),
       prisma.pacienteRegistro.count({ where: { estado: "CASO_RECHAZADO" } }),
@@ -1235,7 +1271,7 @@ app.get("/estadisticas", async (req, res) => {
     res.json({
       data: {
         totalRegistros,
-        pendientesPsicologia,
+        registrosIniciales,
         enEvaluacion,
         beneficiariosActivos,
         casosRechazados,
@@ -1255,8 +1291,7 @@ app.get("/beneficiarios", async (req, res) => {
       include: {
         pacienteRegistro: {
           include: {
-            evaluacionSocial: true,
-            evaluacionPsicologica: true
+            evaluacionSocial: true
           }
         },
         aceptadoPor: {
@@ -1294,24 +1329,15 @@ app.get("/beneficiarios-usuario/:usuarioId", async (req, res) => {
     // Buscar registros donde el usuario participó en las evaluaciones
     const registros = await prisma.pacienteRegistro.findMany({
       where: {
-        OR: [
-          {
-            evaluacionSocial: {
-              trabajadorSocialId: parseInt(usuarioId)
-            }
-          },
-          {
-            evaluacionPsicologica: {
-              psicologoId: parseInt(usuarioId)
-            }
-          }
-        ],
+        // Solo trabajador social tiene evaluaciones ahora
+        evaluacionSocial: {
+          trabajadorSocialId: parseInt(usuarioId)
+        },
         estado: "BENEFICIARIO_ACTIVO"
       },
       include: {
         beneficiario: true,
-        evaluacionSocial: true,
-        evaluacionPsicologica: true
+        evaluacionSocial: true
       }
     });
 
@@ -1365,7 +1391,6 @@ app.get("/beneficiario-movil/:codigoBeneficiario", async (req, res) => {
         pacienteRegistro: {
           include: {
             evaluacionSocial: true,
-            evaluacionPsicologica: true,
           },
         },
         aceptadoPor: {

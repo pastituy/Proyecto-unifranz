@@ -32,7 +32,7 @@ const Verify2FA = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3000/verify-2fa", {
+      const response = await fetch("http://localhost:3000/api/auth/verify-2fa", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
