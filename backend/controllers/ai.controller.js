@@ -3,7 +3,7 @@
  * Maneja las peticiones a servicios de IA para generación de contenido
  */
 
-const fetch = require('node-fetch');
+const { callOpenRouter } = require('../services/openRouterService');
 
 /**
  * Genera contenido usando OpenRouter AI
@@ -21,71 +21,54 @@ const generateContent = async (req, res) => {
       });
     }
 
-    // Verificar que la API key esté configurada
-    if (!process.env.OPENROUTER_API_KEY) {
-      console.error("OPENROUTER_API_KEY no está configurada en .env");
-      return res.status(500).json({
-        success: false,
-        mensaje: "Servicio de IA no configurado. Contacta al administrador."
-      });
-    }
-
-    // Llamar a OpenRouter
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": process.env.ALLOWED_ORIGINS?.split(',')[0] || "http://localhost:5173",
-        "X-Title": "OncoFeliz - Fundación"
-      },
-      body: JSON.stringify({
+    try {
+      const { ok, status, data } = await callOpenRouter({
         model,
         messages,
-        max_tokens: 1200
-      })
-    });
+        max_tokens: 1200,
+        xTitle: 'OncoFeliz - Fundación'
+      });
 
-    const data = await response.json();
+      if (!ok) {
+        if (status === 401) {
+          return res.status(503).json({
+            success: false,
+            mensaje: "La API key de IA expiró o es inválida. Contacta al administrador.",
+            error: "API_KEY_INVALID"
+          });
+        }
 
-    // Si hay error de OpenRouter
-    if (!response.ok) {
-      console.error("Error de OpenRouter:", data);
+        if (status === 429) {
+          return res.status(429).json({
+            success: false,
+            mensaje: "Demasiadas peticiones. Intenta nuevamente en unos minutos.",
+            error: "RATE_LIMIT"
+          });
+        }
 
-      // Error 401 - API key inválida o expirada
-      if (response.status === 401) {
-        return res.status(503).json({
+        return res.status(status).json({
           success: false,
-          mensaje: "La API key de IA expiró o es inválida. Contacta al administrador.",
-          error: "API_KEY_INVALID"
+          mensaje: data.error?.message || "Error al generar contenido",
+          error: data.error
         });
       }
 
-      // Error 429 - Rate limit excedido
-      if (response.status === 429) {
-        return res.status(429).json({
-          success: false,
-          mensaje: "Demasiadas peticiones. Intenta nuevamente en unos minutos.",
-          error: "RATE_LIMIT"
-        });
-      }
-
-      return res.status(response.status).json({
+      // Respuesta exitosa
+      return res.status(200).json({
+        success: true,
+        data: {
+          content: data.choices[0]?.message?.content || "",
+          model: data.model,
+          usage: data.usage
+        }
+      });
+    } catch (error) {
+      console.error("Error en generateContent:", error);
+      return res.status(500).json({
         success: false,
-        mensaje: data.error?.message || "Error al generar contenido",
-        error: data.error
+        mensaje: "Error interno del servidor al generar contenido"
       });
     }
-
-    // Respuesta exitosa
-    return res.status(200).json({
-      success: true,
-      data: {
-        content: data.choices[0]?.message?.content || "",
-        model: data.model,
-        usage: data.usage
-      }
-    });
 
   } catch (error) {
     console.error("Error en generateContent:", error);
@@ -153,7 +136,49 @@ IMPORTANTE:
   }
 };
 
+const completion = async (req, res) => {
+  try {
+    const { model, messages, stream, max_tokens } = req.body;
+
+    // 1. Validación de Entrada
+    if (!model || !messages) {
+      return res.status(400).json({
+        success: false,
+        error: "Los parámetros 'model' y 'messages' son requeridos."
+      });
+    }
+
+    const { ok, status, data } = await callOpenRouter({
+      model,
+      messages,
+      max_tokens: max_tokens || 1024,
+      xTitle: 'Baneco Chatbot'
+    });
+
+    if (!ok) {
+      return res.status(status).json({
+        success: false,
+        error: `Error del servicio de IA: ${data.error?.message || 'Unknown error'}`,
+        details: data
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data
+    });
+
+  } catch (error) {
+    console.error("Error en el controlador de completion:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Error interno del servidor."
+    });
+  }
+};
+
 module.exports = {
   generateContent,
-  chatCancer
+  chatCancer,
+  completion
 };

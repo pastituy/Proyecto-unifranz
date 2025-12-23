@@ -11,7 +11,7 @@ const { authenticateToken } = require('../middleware/auth');
 const { apiLimiter } = require('../middleware/rateLimiter');
 
 // Controladores
-const { generateContent, chatCancer } = require('../controllers/ai.controller');
+const { generateContent, chatCancer, completion } = require('../controllers/ai.controller');
 
 /**
  * POST /api/ai/generate
@@ -33,6 +33,17 @@ router.post('/chat',
   authenticateToken,
   apiLimiter,
   chatCancer
+);
+
+/**
+ * POST /api/ai/completion
+ * Endpoint genérico para interactuar con OpenRouter
+ * Requiere autenticación
+ */
+router.post('/completion',
+  authenticateToken,
+  apiLimiter,
+  completion
 );
 
 module.exports = router;

@@ -1,9 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const pdfParse = require('pdf-parse');
+const { callOpenRouter } = require('./openRouterService');
 
-const OPENROUTER_API_KEY = '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';
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 /**
  * Analiza un PDF de informe social y retorna puntajes de vulnerabilidad
@@ -149,38 +148,26 @@ RESPONDE ÚNICAMENTE CON UN OBJETO JSON en este formato exacto:
     // 3. Llamar a la API de OpenRouter
     console.log('\nLlamando a OpenRouter API...');
 
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'http://localhost:3000',
-        'X-Title': 'Fundación OncoFeliz - Análisis Social'
-      },
-      body: JSON.stringify({
-        model: 'openai/gpt-4o-mini', // Modelo económico y rápido
-        messages: [
-          {
-            role: 'system',
-            content: 'Eres un asistente experto en análisis de vulnerabilidad social. Analizas informes sociales y produces evaluaciones objetivas basadas en criterios específicos. Siempre respondes con JSON válido.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.3, // Baja temperatura para respuestas más consistentes
-        max_tokens: 800
-      })
+    const { ok, data } = await callOpenRouter({
+      model: 'openai/gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: 'Eres un asistente experto en análisis de vulnerabilidad social. Analizas informes sociales y produces evaluaciones objetivas basadas en criterios específicos. Siempre respondes con JSON válido.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 800,
+      xTitle: 'Fundación OncoFeliz - Análisis Social'
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error de OpenRouter:', errorText);
-      throw new Error(`Error en API de OpenRouter: ${response.status} ${errorText}`);
+    if (!ok) {
+      throw new Error(`Error from OpenRouter API: ${data.error?.message || 'Unknown error'}`);
     }
 
-    const data = await response.json();
     console.log('\nRespuesta de OpenRouter recibida');
 
     // 4. Extraer y parsear la respuesta
@@ -335,38 +322,26 @@ INSTRUCCIONES:
     // 3. Llamar a la API de OpenRouter
     console.log('\nLlamando a OpenRouter API para generar resumen...');
 
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'http://localhost:3000',
-        'X-Title': 'Fundación OncoFeliz - Resumen de Caso'
-      },
-      body: JSON.stringify({
-        model: 'openai/gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'Eres un asistente experto en análisis de casos sociales. Generas resúmenes ejecutivos claros y estructurados. Siempre respondes con JSON válido.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.4,
-        max_tokens: 1000
-      })
+    const { ok, data } = await callOpenRouter({
+      model: 'openai/gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: 'Eres un asistente experto en análisis de casos sociales. Generas resúmenes ejecutivos claros y estructurados. Siempre respondes con JSON válido.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 1000,
+      xTitle: 'Fundación OncoFeliz - Resumen de Caso'
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error de OpenRouter:', errorText);
-      throw new Error(`Error en API de OpenRouter: ${response.status} ${errorText}`);
+    if (!ok) {
+      throw new Error(`Error from OpenRouter API: ${data.error?.message || 'Unknown error'}`);
     }
 
-    const data = await response.json();
     console.log('\nRespuesta de OpenRouter recibida');
 
     // 4. Extraer y parsear la respuesta

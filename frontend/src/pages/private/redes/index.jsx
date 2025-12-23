@@ -260,8 +260,6 @@ const PLATFORMS = {
   },
 };
 
-// API Key para OpenRouter (la misma del asistente)
-const OPENROUTER_API_KEY = "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";
 
 const Redes = () => {
   const [messages, setMessages] = useState([]);
@@ -327,15 +325,15 @@ No uses comillas al inicio ni al final del mensaje.`
     };
 
     try {
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      const token = localStorage.getItem('token');
+      const response = await fetch("http://localhost:3000/api/ai/completion", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
-          "HTTP-Referer": "http://localhost:5173",
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
-          model: "openai/chatgpt-4o-latest",
+          model: "openai/gpt-4o-mini",
           max_tokens: 400,
           messages: [
             {
@@ -350,13 +348,13 @@ No uses comillas al inicio ni al final del mensaje.`
         }),
       });
 
-      const data = await response.json();
+      const result = await response.json();
 
-      if (data.choices && data.choices[0]) {
-        const generatedMessage = data.choices[0].message.content.trim();
+      if (result.success) {
+        const generatedMessage = result.data.choices[0].message.content.trim();
         return generatedMessage;
       } else {
-        throw new Error("No se pudo generar el contenido");
+        throw new Error(result.error || "No se pudo generar el contenido");
       }
     } catch (error) {
       console.error("Error generando contenido:", error);
