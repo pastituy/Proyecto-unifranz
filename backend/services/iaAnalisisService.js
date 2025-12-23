@@ -149,7 +149,7 @@ RESPONDE ÚNICAMENTE CON UN OBJETO JSON en este formato exacto:
     console.log('\nLlamando a OpenRouter API...');
 
     const { ok, data } = await callOpenRouter({
-      model: 'openai/gpt-4o-mini',
+      model: 'moonshotai/kimi-k2',
       messages: [
         {
           role: 'system',
@@ -323,7 +323,7 @@ INSTRUCCIONES:
     console.log('\nLlamando a OpenRouter API para generar resumen...');
 
     const { ok, data } = await callOpenRouter({
-      model: 'openai/gpt-4o-mini',
+      model: 'moonshotai/kimi-k2',
       messages: [
         {
           role: 'system',

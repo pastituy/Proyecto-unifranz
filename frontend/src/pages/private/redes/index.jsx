@@ -333,7 +333,7 @@ No uses comillas al inicio ni al final del mensaje.`
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
-          model: "openai/gpt-4o-mini",
+          model: "moonshotai/kimi-k2",
           max_tokens: 400,
           messages: [
             {

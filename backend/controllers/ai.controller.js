@@ -11,7 +11,7 @@ const { callOpenRouter } = require('../services/openRouterService');
  */
 const generateContent = async (req, res) => {
   try {
-    const { messages, model = "anthropic/claude-3.5-sonnet" } = req.body;
+    const { messages, model = "moonshotai/kimi-k2" } = req.body;
 
     // Validar que se envíen mensajes
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -123,7 +123,7 @@ IMPORTANTE:
 
     // Reutilizar la función de generación
     req.body.messages = messages;
-    req.body.model = "anthropic/claude-3.5-sonnet";
+    req.body.model = "moonshotai/kimi-k2";
 
     return await generateContent(req, res);
 
