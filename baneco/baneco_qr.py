@@ -291,11 +291,11 @@ def main():
     """Función principal de demostración"""
     
     # Configuración de credenciales
-    BASE_URL = "https://apimktdesa.baneco.com.bo/ApiGateway"
-    USERNAME = "1649710"
-    PASSWORD = "1234"
-    AES_KEY = "6F09E3167E1D40829207B01041A65B12"
-    ACCOUNT = "1041070599"
+    BASE_URL = os.environ.get("BANECO_BASE_URL", "https://apimktdesa.baneco.com.bo/ApiGateway")
+    USERNAME = os.environ.get("BANECO_USERNAME", "1649710")
+    PASSWORD = os.environ.get("BANECO_PASSWORD", "1234")
+    AES_KEY = os.environ.get("BANECO_AES_KEY", "6F09E3167E1D40829207B01041A65B12")
+    ACCOUNT = os.environ.get("BANECO_ACCOUNT", "1041070599")
     
     print("=" * 60)
     print("🏦 BANCO ECONÓMICO - GENERACIÓN DE QR")

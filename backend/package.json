@@ -8,7 +8,7 @@
     "seed": "node prisma/seed-datos-iniciales.js",
     "verify": "node verificar-seed.js",
     "resumen": "node resumen-datos.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -40,7 +40,9 @@
   },
   "devDependencies": {
     "@prisma/client": "^6.19.0",
+    "jest": "^30.2.0",
     "nodemon": "^3.1.11",
-    "prisma": "^6.19.0"
+    "prisma": "^6.19.0",
+    "supertest": "^7.1.4"
   }
 }
