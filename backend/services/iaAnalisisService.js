@@ -334,7 +334,7 @@ INSTRUCCIONES:
           content: prompt
         }
       ],
-      max_tokens: 1000,
+      max_tokens: 2500,
       xTitle: 'Fundación OncoFeliz - Resumen de Caso'
     });
 

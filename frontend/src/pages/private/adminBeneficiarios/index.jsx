@@ -213,23 +213,37 @@ const AdminBeneficiarios = () => {
   };
 
   const handleGenerarResumenIA = async () => {
+    console.log("=== FRONTEND: Iniciando generación de resumen con IA ===");
+
     if (!selectedCaso?.evaluacionSocial?.informeSocialPdf) {
+      console.error("❌ No hay informe social disponible");
       setError("No hay informe social disponible para generar el resumen");
       return;
     }
+
+    console.log("📄 Archivo PDF:", selectedCaso.evaluacionSocial.informeSocialPdf);
+    console.log("👤 Caso seleccionado:", selectedCaso);
 
     setLoadingResumen(true);
     setShowResumenIA(true);
     setResumenIA(null);
 
     try {
+      console.log("📦 Preparando FormData...");
       const formData = new FormData();
 
       // Obtener el archivo PDF
+      console.log(`🔍 Descargando PDF desde: ${API_URL}/pdf/${selectedCaso.evaluacionSocial.informeSocialPdf}`);
       const pdfResponse = await fetch(`${API_URL}/pdf/${selectedCaso.evaluacionSocial.informeSocialPdf}`);
-      const pdfBlob = await pdfResponse.blob();
-      formData.append('informeSocialPdf', pdfBlob, selectedCaso.evaluacionSocial.informeSocialPdf);
+      console.log("📥 Respuesta del PDF:", pdfResponse.status, pdfResponse.statusText);
 
+      const pdfBlob = await pdfResponse.blob();
+      console.log("📦 Blob creado, tamaño:", pdfBlob.size, "bytes");
+
+      formData.append('informeSocialPdf', pdfBlob, selectedCaso.evaluacionSocial.informeSocialPdf);
+      console.log("✅ FormData preparado");
+
+      console.log(`🚀 Enviando petición a: ${API_URL}/generar-resumen-caso`);
       const response = await fetch(`${API_URL}/generar-resumen-caso`, {
         method: 'POST',
         headers: {
@@ -238,13 +252,18 @@ const AdminBeneficiarios = () => {
         body: formData
       });
 
+      console.log("📨 Respuesta recibida:", response.status, response.statusText);
       const data = await response.json();
+      console.log("📊 Data parseada:", data);
 
       if (data.success) {
+        console.log("✅ Resumen generado exitosamente");
+        console.log("📄 Resumen IA:", data.data.resumen);
         setResumenIA(data.data.resumen);
         setSuccess("Resumen generado exitosamente con IA");
         setTimeout(() => setSuccess(""), 3000);
       } else {
+        console.error("❌ Error en la respuesta:", data.mensaje);
         setError(data.mensaje || "Error al generar el resumen");
         setResumenIA({
           error: true,
@@ -252,13 +271,15 @@ const AdminBeneficiarios = () => {
         });
       }
     } catch (error) {
-      console.error("Error al generar resumen:", error);
+      console.error("❌ Error al generar resumen:", error);
+      console.error("Stack:", error.stack);
       setError("Error de conexión al generar el resumen");
       setResumenIA({
         error: true,
         mensaje: "Error de conexión con el servidor"
       });
     } finally {
+      console.log("🏁 Finalizando proceso de generación");
       setLoadingResumen(false);
     }
   };

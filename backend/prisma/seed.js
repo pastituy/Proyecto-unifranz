@@ -120,14 +120,6 @@ async function main() {
     },
   });
 
-  await prisma.evaluacionPsicologica.create({
-    data: {
-      pacienteRegistroId: paciente1.id,
-      observaciones: "Paciente muestra buena adaptación al tratamiento. Familia muy colaboradora.",
-      psicologoId: psicologo.id,
-    },
-  });
-
   await prisma.beneficiario.create({
     data: {
       pacienteRegistroId: paciente1.id,
@@ -183,14 +175,6 @@ async function main() {
       puntajeTotal: 62,
       nivelVulnerabilidad: "MEDIO",
       trabajadorSocialId: trabajadorSocial.id,
-    },
-  });
-
-  await prisma.evaluacionPsicologica.create({
-    data: {
-      pacienteRegistroId: paciente2.id,
-      observaciones: "Paciente completó tratamiento exitosamente. Requiere seguimiento psicológico.",
-      psicologoId: psicologo.id,
     },
   });
 
@@ -253,14 +237,6 @@ async function main() {
     },
   });
 
-  await prisma.evaluacionPsicologica.create({
-    data: {
-      pacienteRegistroId: paciente3.id,
-      observaciones: "Familia requiere apoyo psicológico intensivo. Fase muy difícil del tratamiento.",
-      psicologoId: psicologo.id,
-    },
-  });
-
   await prisma.beneficiario.create({
     data: {
       pacienteRegistroId: paciente3.id,
@@ -316,14 +292,6 @@ async function main() {
       puntajeTotal: 82,
       nivelVulnerabilidad: "ALTO",
       trabajadorSocialId: trabajadorSocial.id,
-    },
-  });
-
-  await prisma.evaluacionPsicologica.create({
-    data: {
-      pacienteRegistroId: paciente4.id,
-      observaciones: "Familia presenta resistencia al tratamiento. Requiere intervención urgente.",
-      psicologoId: psicologo.id,
     },
   });
 
@@ -386,14 +354,6 @@ async function main() {
     },
   });
 
-  await prisma.evaluacionPsicologica.create({
-    data: {
-      pacienteRegistroId: paciente5.id,
-      observaciones: "Diagnóstico en etapa muy avanzada. Familia necesita preparación para duelo.",
-      psicologoId: psicologo.id,
-    },
-  });
-
   await prisma.beneficiario.create({
     data: {
       pacienteRegistroId: paciente5.id,
@@ -446,14 +406,6 @@ async function main() {
       puntajeTotal: 69,
       nivelVulnerabilidad: "ALTO",
       trabajadorSocialId: trabajadorSocial.id,
-    },
-  });
-
-  await prisma.evaluacionPsicologica.create({
-    data: {
-      pacienteRegistroId: paciente6.id,
-      observaciones: "Paciente muestra signos de ansiedad. Responde bien a las sesiones de apoyo.",
-      psicologoId: psicologo.id,
     },
   });
 
