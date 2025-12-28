@@ -22,6 +22,7 @@ const { cors: corsConfig, helmet: helmetConfig } = require("./config/security");
 
 // Middlewares de seguridad globales
 const { apiLimiter } = require("./middleware/rateLimiter");
+const { authenticateToken } = require("./middleware/auth");
 
 // Controladores existentes (temporalmente hasta refactorizar a MVC puro)
 const Usuario = require("./controllers/usuario");
@@ -153,6 +154,11 @@ app.use("/api/auth", authRoutes);
 // ✅ IA (OpenRouter) - NUEVO
 const aiRoutes = require("./routes/ai.routes");
 app.use("/api/ai", aiRoutes);
+
+// ✅ WhatsApp Templates - NUEVO
+const whatsappTemplateRoutes = require("./routes/whatsappTemplateRoutes");
+app.use("/api/whatsapp-templates", authenticateToken, whatsappTemplateRoutes);
+
 
 // Pendientes de migración:
 // app.use("/api/donaciones", donacionesRoutes);
