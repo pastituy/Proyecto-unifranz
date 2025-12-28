@@ -4,6 +4,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const { analizarInformeSocial, generarResumenCaso } = require("../services/iaAnalisisService");
+const { notificarAceptacion, notificarRechazo } = require("../services/notificacionService");
 
 const app = express.Router();
 const prisma = new PrismaClient();
@@ -728,6 +729,18 @@ app.put("/rechazar-caso/:registroId", async (req, res) => {
       });
     }
 
+    // Obtener información del registro antes de actualizar
+    const registro = await prisma.pacienteRegistro.findUnique({
+      where: { id: parseInt(registroId) }
+    });
+
+    if (!registro) {
+      return res.status(404).json({
+        success: false,
+        mensaje: "Registro no encontrado"
+      });
+    }
+
     const actualizado = await prisma.pacienteRegistro.update({
       where: { id: parseInt(registroId) },
       data: {
@@ -736,10 +749,25 @@ app.put("/rechazar-caso/:registroId", async (req, res) => {
       },
     });
 
+    // Enviar notificación de WhatsApp al tutor
+    console.log("=== ENVIANDO NOTIFICACIÓN WHATSAPP (RECHAZO) ===");
+    const whatsappResult = await notificarRechazo({
+      nombreCompleto: registro.nombreCompletoTutor,
+      telefono: registro.telefonoTutor
+    });
+
+    if (whatsappResult.success) {
+      console.log("✅ Notificación WhatsApp enviada exitosamente");
+    } else {
+      console.error("⚠️ No se pudo enviar la notificación WhatsApp:", whatsappResult.error);
+      // No fallar la operación si WhatsApp falla, solo loguear el error
+    }
+
     res.json({
       success: true,
       data: actualizado,
-      mensaje: "Caso rechazado correctamente"
+      mensaje: "Caso rechazado correctamente",
+      whatsappEnviado: whatsappResult.success
     });
   } catch (error) {
     console.error("Error al rechazar caso:", error);
@@ -830,10 +858,25 @@ app.put("/aceptar-caso/:registroId", async (req, res) => {
       return beneficiario;
     });
 
+    // Enviar notificación de WhatsApp al tutor
+    console.log("=== ENVIANDO NOTIFICACIÓN WHATSAPP (ACEPTACIÓN) ===");
+    const whatsappResult = await notificarAceptacion({
+      nombreCompleto: registro.nombreCompletoTutor,
+      telefono: registro.telefonoTutor
+    });
+
+    if (whatsappResult.success) {
+      console.log("✅ Notificación WhatsApp enviada exitosamente");
+    } else {
+      console.error("⚠️ No se pudo enviar la notificación WhatsApp:", whatsappResult.error);
+      // No fallar la operación si WhatsApp falla, solo loguear el error
+    }
+
     res.json({
       success: true,
       data: resultado,
-      mensaje: `Caso aceptado correctamente. Usuario creado - Código: ${codigoBeneficiario}, Contraseña: CI del tutor`
+      mensaje: `Caso aceptado correctamente. Usuario creado - Código: ${codigoBeneficiario}, Contraseña: CI del tutor`,
+      whatsappEnviado: whatsappResult.success
     });
   } catch (error) {
     console.error("Error al aceptar caso:", error);

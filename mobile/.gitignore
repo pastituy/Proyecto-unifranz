@@ -1,0 +1,98 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.keystore
+
+# Android
+*.apk
+*.aab
+android/app/debug
+android/app/release
+android/.gradle/
+android/app/build/
+android/.idea/
+android/local.properties
+android/*.iml
+.gradle/
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/build/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+DerivedData/
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+
+# macOS
+.DS_Store
+*.pem
+Thumbs.db
+
+# Environment variables and secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Credentials
+google-services.json
+GoogleService-Info.plist
+
+# typescript
+*.tsbuildinfo
+
+# VSCode
+.vscode/
+.idea/
+
+# Build artifacts
+build/
+*.apk
+*.ipa
+*.app
+*.aab
+
+# Temporary files
+*.tmp
+*.temp
+nul
+
+# Example files
+app-example
