@@ -312,6 +312,17 @@ model CodigoVerificacion {
   @@map("codigos_verificacion")
 }
 
+model WhatsappTemplate {
+  id          Int      @id @default(autoincrement())
+  codigo      String   @unique
+  plantilla   String   @db.Text
+  descripcion String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("whatsapp_templates")
+}
+
 enum Rol {
   ADMINISTRADOR
   PSICOLOGO

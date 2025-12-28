@@ -1,4 +1,7 @@
 const axios = require('axios');
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const Mustache = require('mustache');
 
 /**
  * Servicio para enviar notificaciones de WhatsApp mediante factura.com.bo
@@ -35,18 +38,32 @@ const formatearTelefono = (telefono) => {
 /**
  * Genera el mensaje personalizado según el estado del caso
  * @param {string} nombre - Nombre completo del beneficiario
- * @param {string} estado - Estado del caso (BENEFICIARIO_ACTIVO o CASO_RECHAZADO)
- * @returns {string} - Mensaje formateado
+ * @param {string} estado - Código del template a utilizar (ej: "BIENVENIDA", "RECHAZO")
+ * @returns {Promise<string>} - Mensaje formateado
  */
-const generarMensaje = (nombre, estado) => {
-  const nombreCapitalizado = nombre.trim();
+const generarMensaje = async (nombre, estado) => {
+  try {
+    const codigoTemplate = estado === 'BENEFICIARIO_ACTIVO' || estado === 'ACEPTADO'
+      ? 'BIENVENIDA_BENEFICIARIO'
+      : 'RECHAZO_BENEFICIARIO';
 
-  if (estado === 'BENEFICIARIO_ACTIVO' || estado === 'ACEPTADO') {
-    return `🎗️ *Fundación OncoFeliz*\n\n¡Hola ${nombreCapitalizado}!\n\nNos complace informarte que tu solicitud ha sido *ACEPTADA* ✅\n\nAhora eres parte de nuestra familia OncoFeliz. Pronto nos pondremos en contacto contigo para coordinar los siguientes pasos del apoyo.\n\n¡Estamos contigo en este camino! 💪💙`;
-  } else if (estado === 'CASO_RECHAZADO' || estado === 'RECHAZADO') {
-    return `🎗️ *Fundación OncoFeliz*\n\nHola ${nombreCapitalizado},\n\nLamentamos informarte que tu solicitud no ha podido ser aceptada en este momento ❌\n\nEsto puede deberse a diversos factores evaluados en el análisis de tu caso. Si tienes dudas o deseas más información, puedes comunicarte con nosotros.\n\nGracias por tu comprensión.\n\nFundación OncoFeliz`;
-  } else {
-    throw new Error(`Estado de caso no válido: ${estado}`);
+    const template = await prisma.whatsappTemplate.findUnique({
+      where: { codigo: codigoTemplate },
+    });
+
+    if (!template) {
+      throw new Error(`No se encontró el template de WhatsApp con código: ${codigoTemplate}`);
+    }
+
+    const datos = {
+      nombre: nombre.trim(),
+    };
+
+    return Mustache.render(template.plantilla, datos);
+  } catch (error) {
+    console.error("Error al generar mensaje desde template:", error);
+    // Fallback a un mensaje genérico en caso de error
+    return `Hola ${nombre.trim()}, te informamos que ha habido una actualización en tu caso. Contacta a la fundación para más detalles.`;
   }
 };
 
@@ -76,9 +93,10 @@ const enviarWhatsApp = async (nombre, estado, telefono) => {
     console.log('📞 (Teléfono real que se usaría en producción:', telefono + ')');
     console.log('📞 Teléfono formateado:', telefonoFormateado);
 
-    // Generar mensaje
-    const mensaje = generarMensaje(nombre, estado);
-    console.log('💬 Mensaje generado:', mensaje.substring(0, 50) + '...');
+    // Generar mensaje desde la plantilla
+    console.log('📝 Generando mensaje desde template...');
+    const mensaje = await generarMensaje(nombre, estado);
+    console.log('💬 Mensaje generado:', mensaje.substring(0, 80) + '...');
 
     // Preparar payload
     const payload = {
