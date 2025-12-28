@@ -150,9 +150,9 @@ const enviarWhatsApp = async (nombre, estado, telefono) => {
 };
 
 /**
- * Envía notificación de aceptación de caso
- * @param {Object} beneficiario - Datos del beneficiario
- * @returns {Promise<Object>}
+ * Envía notificación de aceptación de caso.
+ * @param {Object} beneficiario - Datos del beneficiario, debe contener `nombreCompleto` y `telefono`.
+ * @returns {Promise<Object>} - El resultado del envío de la notificación.
  */
 const notificarAceptacion = async (beneficiario) => {
   const { nombreCompleto, telefono } = beneficiario;

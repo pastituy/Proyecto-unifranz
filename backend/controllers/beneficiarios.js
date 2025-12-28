@@ -678,6 +678,15 @@ app.post("/aceptar-caso/:registroId", async (req, res) => {
       });
     }
 
+    // Obtener los datos del registro para la notificación
+    const registro = await prisma.pacienteRegistro.findUnique({
+      where: { id: parseInt(registroId) },
+    });
+
+    if (!registro) {
+      return res.status(404).json({ success: false, mensaje: "Registro no encontrado" });
+    }
+
     // Generar código de beneficiario
     const ultimoBeneficiario = await prisma.beneficiario.findFirst({
       orderBy: { id: "desc" },
@@ -701,10 +710,25 @@ app.post("/aceptar-caso/:registroId", async (req, res) => {
       data: { estado: "BENEFICIARIO_ACTIVO" },
     });
 
+    // Enviar notificación de WhatsApp al tutor
+    console.log("=== ENVIANDO NOTIFICACIÓN WHATSAPP (ACEPTACIÓN) ===");
+    const whatsappResult = await notificarAceptacion({
+      nombreCompleto: registro.nombreCompletoTutor,
+      telefono: registro.telefonoTutor
+    });
+
+    if (whatsappResult.success) {
+      console.log("✅ Notificación WhatsApp enviada exitosamente");
+    } else {
+      console.error("⚠️ No se pudo enviar la notificación WhatsApp:", whatsappResult.error);
+      // No fallar la operación si WhatsApp falla, solo loguear el error
+    }
+
     res.status(201).json({
       success: true,
       data: beneficiario,
       mensaje: `Caso aceptado. Código de beneficiario: ${codigoBeneficiario}`,
+      whatsappEnviado: whatsappResult.success,
     });
   } catch (error) {
     console.error("Error al aceptar caso:", error);
