@@ -34,9 +34,9 @@ model Donaciones {
   cantidad      String
   metodoPago    String
   descripcion   String?
+  fecha         DateTime @default(now())
   idCampana     Int?
   campana       Campana? @relation(fields: [idCampana], references: [id])
-  fecha         DateTime @default(now())
 }
 
 model Padre {
@@ -131,15 +131,14 @@ model PacienteRegistro {
   telefonoTutor       String
   direccion           String
   emailTutor          String?
-  estado              EstadoRegistro    @default(REGISTRO_INICIAL)
-  motivoRechazo       String?
   creadoPorId         Int
-  creadoPor           Usuario           @relation("CreadorRegistro", fields: [creadoPorId], references: [id])
   fechaRegistro       DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
-
-  evaluacionSocial    EvaluacionSocial?
+  motivoRechazo       String?
+  estado              EstadoRegistro    @default(REGISTRO_INICIAL)
   beneficiario        Beneficiario?
+  evaluacionSocial    EvaluacionSocial?
+  creadoPor           Usuario           @relation("CreadorRegistro", fields: [creadoPorId], references: [id])
 
   @@map("pacientes_registro")
 }

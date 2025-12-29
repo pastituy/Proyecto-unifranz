@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { FaBrain, FaNewspaper } from "react-icons/fa6";
 import { FaUserPlus } from "react-icons/fa6";
 import { FaMoneyBill } from "react-icons/fa6";
-import { FaInternetExplorer, FaClipboardList, FaUserMd, FaUsers, FaFileAlt, FaHandHoldingHeart } from "react-icons/fa";
+import { FaInternetExplorer, FaClipboardList, FaUserMd, FaUsers, FaFileAlt, FaHandHoldingHeart, FaWhatsapp } from "react-icons/fa";
 import { HiChat } from "react-icons/hi";
 
 const Sidebar = () => {
