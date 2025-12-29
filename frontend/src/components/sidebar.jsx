@@ -72,7 +72,7 @@ const Sidebar = () => {
         },
         {
           path: "/dasboard/notificaciones-ws",
-          icon: <FaWhatsapp />,
+          icon: <HiChat />,
           text: "Notificaciones WS",
         },
       ],
