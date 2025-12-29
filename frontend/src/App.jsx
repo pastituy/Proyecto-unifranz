@@ -18,6 +18,7 @@ import Psicologo from "./pages/private/psicologo";
 import TrabajoSocial from "./pages/private/trabajadorSocial";
 import Asistente from "./pages/private/asistente";
 import AdminBeneficiarios from "./pages/private/adminBeneficiarios";
+import NotificacionesWS from "./pages/private/notificacionesWS";
 import TrabajadorSocialBeneficiarios from "./pages/private/trabajadorSocial/beneficiarios";
 import PsicologoBeneficiarios from "./pages/private/psicologo/beneficiarios";
 import AsistenteSolicitudes from "./pages/private/asistente/solicitudes";
@@ -128,6 +129,14 @@ const AppContent = () => {
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
                     <Redes />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dasboard/notificaciones-ws"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
+                    <NotificacionesWS />
                   </ProtectedRoute>
                 }
               />

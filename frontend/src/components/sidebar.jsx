@@ -70,6 +70,11 @@ const Sidebar = () => {
           icon: <FaInternetExplorer />,
           text: "Redes Sociales",
         },
+        {
+          path: "/dasboard/notificaciones-ws",
+          icon: <HiChat />,
+          text: "Notificaciones WS",
+        },
       ],
 
       // Items para Psicólogo
