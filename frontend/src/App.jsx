@@ -14,6 +14,7 @@ import Usuario from "./pages/private/usuario";
 import Donaciones from "./pages/private/donaciones";
 import CancerNewsChat from "./pages/private/chat";
 import Redes from "./pages/private/redes";
+import NotificacionesWS from "./pages/private/notificacionesWS";
 import Psicologo from "./pages/private/psicologo";
 import TrabajoSocial from "./pages/private/trabajadorSocial";
 import Asistente from "./pages/private/asistente";
@@ -128,6 +129,14 @@ const AppContent = () => {
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
                     <Redes />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dasboard/notificaciones-ws"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
+                    <NotificacionesWS />
                   </ProtectedRoute>
                 }
               />
