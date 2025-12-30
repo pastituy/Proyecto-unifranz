@@ -141,10 +141,10 @@ const Sidebar = () => {
   const navigationItems = getNavigationItems();
 
   return (
-    <SidebarContainer collapsed={collapsed}>
+    <SidebarContainer $collapsed={collapsed}>
       <LogoContainer>
         <LogoWrapper>
-          <LogoText collapsed={collapsed}>OF</LogoText>
+          <LogoText $collapsed={collapsed}>OF</LogoText>
         </LogoWrapper>
         {!collapsed && <BrandName>OncoFeliz</BrandName>}
       </LogoContainer>

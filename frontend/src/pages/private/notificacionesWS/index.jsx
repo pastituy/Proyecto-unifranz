@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import styled from "styled-components";
 import { useUser } from "../../../context/userContext";
 import toast from "react-hot-toast";
@@ -81,6 +82,7 @@ const NotificacionesWS = () => {
   };
 
   const openModal = (template = null) => {
+    console.log('openModal called', { template, showModal });
     if (template) {
       setIsEditing(true);
       setCurrentTemplate(template);
@@ -99,6 +101,7 @@ const NotificacionesWS = () => {
       });
     }
     setShowModal(true);
+    console.log('showModal set to true');
   };
 
   const closeModal = () => {
@@ -162,9 +165,9 @@ const NotificacionesWS = () => {
         />
       )}
 
-      {showModal && (
-        <ModalOverlay>
-          <Modal>
+      {showModal && createPortal(
+        <ModalOverlay onClick={closeModal}>
+          <Modal onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
               <h2>{isEditing ? "Editar Plantilla" : "Nueva Plantilla"}</h2>
               <CloseButton onClick={closeModal}>&times;</CloseButton>
@@ -204,7 +207,7 @@ const NotificacionesWS = () => {
                     required
                   />
                   <small>
-                    Usa <code>{{nombre}}</code> para el nombre del destinatario.
+                    Usa <code>{'{{nombre}}'}</code> para el nombre del destinatario.
                   </small>
                 </FormGroup>
                 <ButtonGroup>
@@ -218,7 +221,8 @@ const NotificacionesWS = () => {
               </Form>
             </ModalContent>
           </Modal>
-        </ModalOverlay>
+        </ModalOverlay>,
+        document.body
       )}
     </Container>
   );
@@ -297,7 +301,7 @@ const ModalOverlay = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 9999;
 `;
 
 const Modal = styled.div`

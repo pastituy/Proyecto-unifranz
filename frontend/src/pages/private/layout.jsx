@@ -31,4 +31,6 @@ const DivOutled = styled.div`
 `;
 const DivOutl = styled.div`
   height: calc(100vh - 60px);
+  position: relative;
+  overflow: auto;
 `;
