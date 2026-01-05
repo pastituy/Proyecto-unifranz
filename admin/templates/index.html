@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OncoFeliz - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #818cf8, #34d399);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .terminal {
+            background: #000;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+            height: 300px;
+            overflow-y: auto;
+            color: #adbac7;
+            border: 1px solid #30363d;
+        }
+
+        .log-container {
+            margin-top: 2rem;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-online {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 1.2rem;
+            height: 1.2rem;
+            border: 3px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .service-list {
+            list-style: none;
+        }
+
+        .service-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .service-name {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>OncoFeliz Admin</h1>
+            <p class="subtitle">System Control & Monitoring Interface</p>
+        </header>
+
+        <div class="grid">
+            <!-- Source Control -->
+            <div class="card">
+                <h2>📦 Updates</h2>
+                <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem;">Force pull latest
+                    changes from repository.</p>
+                <button class="btn btn-primary" onclick="runAction('/api/git-pull', this)">
+                    <span class="loading-spinner"></span>
+                    Git Force Pull
+                </button>
+            </div>
+
+            <!-- Database -->
+            <div class="card">
+                <h2>🗄️ Database</h2>
+                <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem;">Create a fresh backup
+                    of 'onco' database.</p>
+                <button class="btn btn-success" onclick="runAction('/api/db-backup', this)">
+                    <span class="loading-spinner"></span>
+                    DB Backup (PostgreSQL)
+                </button>
+            </div>
+
+            <!-- Services -->
+            <div class="card">
+                <h2>⚙️ Services</h2>
+                <ul class="service-list" style="margin-bottom: 1.5rem;">
+                    <li class="service-item">
+                        <span class="service-name">oncofeliz-backend</span>
+                        <span class="status-pill status-online">Active</span>
+                    </li>
+                    <li class="service-item">
+                        <span class="service-name">oncofeliz-frontend</span>
+                        <span class="status-pill status-online">Active</span>
+                    </li>
+                    <li class="service-item">
+                        <span class="service-name">postgresql@18-main</span>
+                        <span class="status-pill status-online">Active</span>
+                    </li>
+                </ul>
+                <button class="btn btn-danger" onclick="runAction('/api/restart-services', this)">
+                    <span class="loading-spinner"></span>
+                    Restart All Services
+                </button>
+            </div>
+        </div>
+
+        <div class="log-container card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2>📜 System Logs</h2>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-primary" style="width: auto;"
+                        onclick="startLogs('oncofeliz-backend')">Backend Logs</button>
+                    <button class="btn btn-primary" style="width: auto;"
+                        onclick="startLogs('oncofeliz-frontend')">Frontend Logs</button>
+                    <button class="btn btn-warning" style="width: auto;" onclick="clearLogs()">Clear</button>
+                </div>
+            </div>
+            <div id="log-terminal" class="terminal">
+                Waiting for logs... Click a button above to start monitoring.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const terminal = document.getElementById('log-terminal');
+
+        socket.on('log_data', function (msg) {
+            const div = document.createElement('div');
+            div.textContent = `[${msg.service}] ${msg.data}`;
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+
+            // Keep only last 500 lines
+            if (terminal.childNodes.length > 500) {
+                terminal.removeChild(terminal.firstChild);
+            }
+        });
+
+        function clearLogs() {
+            terminal.innerHTML = 'Logs cleared. Waiting for data...';
+        }
+
+        function startLogs(service) {
+            clearLogs();
+            socket.emit('start_logs', { service: service });
+        }
+
+        async function runAction(url, btn) {
+            const spinner = btn.querySelector('.loading-spinner');
+            spinner.style.display = 'inline-block';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(url, { method: 'POST' });
+                const data = await response.json();
+
+                const logEntry = document.createElement('div');
+                logEntry.style.color = data.success ? '#10b981' : '#ef4444';
+                logEntry.innerHTML = `<strong>[ACTION]</strong> ${url.split('/').pop()} - ${data.success ? 'SUCCESS' : 'FAILED'}<br>${data.stdout || ''}${data.stderr || ''}`;
+                terminal.prepend(logEntry);
+
+                if (data.details) {
+                    console.table(data.details);
+                }
+            } catch (error) {
+                alert('Action failed: ' + error);
+            } finally {
+                spinner.style.display = 'none';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>
