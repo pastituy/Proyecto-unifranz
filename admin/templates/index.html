@@ -259,6 +259,11 @@
                         <span class="status-pill status-online">Active</span>
                     </li>
                     <li class="service-item">
+                        <span class="service-name">oncofeliz-admin</span>
+                        <span class="status-pill status-online"
+                            style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">Admin</span>
+                    </li>
+                    <li class="service-item">
                         <span class="service-name">postgresql@18-main</span>
                         <span class="status-pill status-online">Active</span>
                     </li>
@@ -297,11 +302,13 @@
         <div class="log-container card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h2>📜 System Logs</h2>
-                <div style="display: flex; gap: 0.5rem;">
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     <button class="btn btn-primary" style="width: auto;"
                         onclick="startLogs('oncofeliz-backend')">Backend Logs</button>
                     <button class="btn btn-primary" style="width: auto;"
                         onclick="startLogs('oncofeliz-frontend')">Frontend Logs</button>
+                    <button class="btn btn-primary" style="width: auto; background: #4f46e5;"
+                        onclick="startLogs('oncofeliz-admin')">Admin Logs</button>
                     <button class="btn btn-warning" style="width: auto;" onclick="clearLogs()">Clear</button>
                 </div>
             </div>

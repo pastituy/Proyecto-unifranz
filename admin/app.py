@@ -130,6 +130,7 @@ def restart_services():
     services = [
         "oncofeliz-backend.service",
         "oncofeliz-frontend.service",
+        "oncofeliz-admin.service",
         "postgresql@18-main.service"
     ]
     results = {}
@@ -142,7 +143,7 @@ def restart_services():
 @socketio.on('start_logs')
 def handle_logs(data):
     service = data.get('service')
-    if service not in ['oncofeliz-backend', 'oncofeliz-frontend']:
+    if service not in ['oncofeliz-backend', 'oncofeliz-frontend', 'oncofeliz-admin']:
         emit('log_data', {'data': 'Invalid service'})
         return
 
