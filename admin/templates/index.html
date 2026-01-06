@@ -376,7 +376,14 @@
 
                 const logEntry = document.createElement('div');
                 logEntry.style.color = data.success ? '#10b981' : '#ef4444';
-                logEntry.innerHTML = `<strong>[ACTION]</strong> ${url.split('/').pop()} - ${data.success ? 'SUCCESS' : 'FAILED'}<br>${data.stdout || ''}${data.stderr || ''}`;
+
+                let message = `<strong>[ACTION]</strong> ${url.split('/').pop()} - ${data.success ? 'SUCCESS' : 'FAILED'}<br>${data.stdout || ''}${data.stderr || ''}`;
+
+                if (data.download_url) {
+                    message += `<br><a href="${data.download_url}" class="btn btn-success" style="width: auto; margin-top: 10px; display: inline-flex;">⬇️ Download Backup (.tar.gz)</a>`;
+                }
+
+                logEntry.innerHTML = message;
                 terminal.prepend(logEntry);
 
                 if (data.details) {

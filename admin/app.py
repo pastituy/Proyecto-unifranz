@@ -1,6 +1,6 @@
 import subprocess
 import os
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, send_from_directory
 from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
@@ -56,28 +56,44 @@ def git_log():
 
 @app.route('/api/db-backup', methods=['POST'])
 def db_backup():
-    backup_file = f"/tmp/onco_backup_{os.popen('date +%Y%m%d_%H%M%S').read().strip()}.sql"
+    timestamp = os.popen('date +%Y%m%d_%H%M%S').read().strip()
+    sql_file = f"/tmp/onco_backup_{timestamp}.sql"
+    tar_file = f"onco_backup_{timestamp}.tar.gz"
+    tar_path = f"/tmp/{tar_file}"
+    
     env = os.environ.copy()
     env["PGPASSWORD"] = DB_CONFIG["pass"]
     
-    cmd = f"pg_dump -h {DB_CONFIG['host']} -p {DB_CONFIG['port']} -U {DB_CONFIG['user']} -d {DB_CONFIG['dbname']} -F p -f {backup_file}"
+    # 1. Run pg_dump
+    dump_cmd = f"pg_dump -h {DB_CONFIG['host']} -p {DB_CONFIG['port']} -U {DB_CONFIG['user']} -d {DB_CONFIG['dbname']} -F p -f {sql_file}"
     
     try:
-        process = subprocess.Popen(
-            cmd, 
-            shell=True, 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE,
-            env=env,
-            text=True
-        )
+        # Dump
+        process = subprocess.Popen(dump_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env, text=True)
         stdout, stderr = process.communicate()
-        if process.returncode == 0:
-            return jsonify({"success": True, "stdout": f"Backup created at {backup_file}", "stderr": ""})
-        else:
+        
+        if process.returncode != 0:
             return jsonify({"success": False, "stdout": stdout, "stderr": stderr})
+        
+        # 2. Compress
+        compress_cmd = f"tar -czf {tar_path} -C /tmp {os.path.basename(sql_file)}"
+        subprocess.run(compress_cmd, shell=True)
+        
+        # 3. Cleanup SQL file
+        os.remove(sql_file)
+        
+        return jsonify({
+            "success": True, 
+            "stdout": f"Backup created: {tar_file}", 
+            "download_url": f"/api/download/{tar_file}",
+            "stderr": ""
+        })
     except Exception as e:
         return jsonify({"success": False, "stdout": "", "stderr": str(e)})
+
+@app.route('/api/download/<filename>')
+def download_file(filename):
+    return send_from_directory("/tmp", filename, as_attachment=True)
 
 @app.route('/api/restart-services', methods=['POST'])
 def restart_services():
