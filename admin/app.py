@@ -14,7 +14,7 @@ DB_CONFIG = {
     "port": "5432",
     "user": "onco",
     "pass": "Joss2025",
-    "dbname": "onco"
+    "dbname": "oncologico"
 }
 
 def run_command(cmd, cwd=None):
