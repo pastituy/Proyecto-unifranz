@@ -1,7 +1,8 @@
 import subprocess
 import os
-from flask import Flask, render_template, jsonify, request, send_from_directory
+from flask import Flask, render_template, jsonify, request, send_from_directory, session, redirect, url_for
 from flask_socketio import SocketIO, emit
+from functools import wraps
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'oncofeliz-secret-key'
@@ -9,6 +10,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Configuration
 REPO_PATH = "/opt/git/Proyecto-unifranz"
+MASTER_PASSWORD = "Joss2025"
 DB_CONFIG = {
     "host": "104.36.110.193",
     "port": "5432",
@@ -16,6 +18,14 @@ DB_CONFIG = {
     "pass": "Joss2025",
     "dbname": "oncologico"
 }
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('logged_in'):
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 def run_command(cmd, cwd=None):
     try:
@@ -36,11 +46,27 @@ def run_command(cmd, cwd=None):
     except Exception as e:
         return {"success": False, "stdout": "", "stderr": str(e)}
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        if request.form.get('password') == MASTER_PASSWORD:
+            session['logged_in'] = True
+            return redirect(url_for('index'))
+        return render_template('login.html', error="Invalid Password")
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    return redirect(url_for('login'))
+
 @app.route('/')
+@login_required
 def index():
     return render_template('index.html')
 
 @app.route('/api/git-pull', methods=['POST'])
+@login_required
 def git_pull():
     # Force git pull last commit
     cmd = "git fetch --all && git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)"
@@ -48,6 +74,7 @@ def git_pull():
     return jsonify(result)
 
 @app.route('/api/git-log', methods=['GET'])
+@login_required
 def git_log():
     # Get last 20 commits with date, author and message
     cmd = 'git log -n 20 --pretty=format:"%h | %as | %an | %s"'
@@ -55,6 +82,7 @@ def git_log():
     return jsonify(result)
 
 @app.route('/api/db-backup', methods=['POST'])
+@login_required
 def db_backup():
     timestamp = os.popen('date +%Y%m%d_%H%M%S').read().strip()
     sql_file = f"/tmp/onco_backup_{timestamp}.sql"
@@ -92,10 +120,12 @@ def db_backup():
         return jsonify({"success": False, "stdout": "", "stderr": str(e)})
 
 @app.route('/api/download/<filename>')
+@login_required
 def download_file(filename):
     return send_from_directory("/tmp", filename, as_attachment=True)
 
 @app.route('/api/restart-services', methods=['POST'])
+@login_required
 def restart_services():
     services = [
         "oncofeliz-backend.service",
