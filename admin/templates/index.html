@@ -264,6 +264,30 @@
                     Restart All Services
                 </button>
             </div>
+            <!-- Repository History -->
+            <div class="card">
+                <h2>📜 Git History</h2>
+                <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem;">View the last 20
+                    commits in the repository.</p>
+                <button class="btn btn-primary" onclick="loadGitLog(this)">
+                    <span class="loading-spinner"></span>
+                    Show Commit History
+                </button>
+            </div>
+        </div>
+
+        <!-- Git Log Viewer (Initially hidden) -->
+        <div id="git-log-section" class="card"
+            style="display: none; margin-bottom: 2rem; border-color: var(--primary);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2>🌳 Latest Commits</h2>
+                <button class="btn btn-warning" style="width: auto;"
+                    onclick="document.getElementById('git-log-section').style.display='none'">Close</button>
+            </div>
+            <div id="git-log-content" class="terminal"
+                style="height: auto; max-height: 400px; font-size: 0.8rem; line-height: 1.6;">
+                Loading history...
+            </div>
         </div>
 
         <div class="log-container card">
@@ -306,6 +330,39 @@
         function startLogs(service) {
             clearLogs();
             socket.emit('start_logs', { service: service });
+        }
+
+        async function loadGitLog(btn) {
+            const spinner = btn.querySelector('.loading-spinner');
+            const section = document.getElementById('git-log-section');
+            const content = document.getElementById('git-log-content');
+
+            spinner.style.display = 'inline-block';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/git-log');
+                const data = await response.json();
+
+                section.style.display = 'block';
+                if (data.success) {
+                    const lines = data.stdout.trim().split('\n');
+                    content.innerHTML = lines.map(line => {
+                        const [hash, date, author, msg] = line.split(' | ');
+                        return `<div><span style="color: #818cf8; font-weight: bold;">${hash}</span> <span style="color: var(--text-muted)">[${date}]</span> <span style="color: var(--success)">${author}</span>: ${msg}</div>`;
+                    }).join('');
+
+                    // Smooth scroll to history
+                    section.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    content.innerText = 'Error loading log: ' + data.stderr;
+                }
+            } catch (error) {
+                alert('Request failed: ' + error);
+            } finally {
+                spinner.style.display = 'none';
+                btn.disabled = false;
+            }
         }
 
         async function runAction(url, btn) {

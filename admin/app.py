@@ -47,6 +47,13 @@ def git_pull():
     result = run_command(cmd, cwd=REPO_PATH)
     return jsonify(result)
 
+@app.route('/api/git-log', methods=['GET'])
+def git_log():
+    # Get last 20 commits with date, author and message
+    cmd = 'git log -n 20 --pretty=format:"%h | %as | %an | %s"'
+    result = run_command(cmd, cwd=REPO_PATH)
+    return jsonify(result)
+
 @app.route('/api/db-backup', methods=['POST'])
 def db_backup():
     backup_file = f"/tmp/onco_backup_{os.popen('date +%Y%m%d_%H%M%S').read().strip()}.sql"
