@@ -333,7 +333,6 @@ No uses comillas al inicio ni al final del mensaje.`
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
-          model: "nvidia/nemotron-3.5-super-vl:free",
           max_tokens: 400,
           messages: [
             {

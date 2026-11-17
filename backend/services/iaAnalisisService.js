@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const pdfParse = require('pdf-parse');
-const { callOpenRouter } = require('./openRouterService');
+const { callAI } = require('./aiService');
 
 
 /**
@@ -145,11 +145,10 @@ RESPONDE ÚNICAMENTE CON UN OBJETO JSON en este formato exacto:
   "nivelVulnerabilidad": "ALTA" (si puntajeTotal >= 60), "MEDIA" (si 30-59), o "BAJA" (si < 30)
 }`;
 
-    // 3. Llamar a la API de OpenRouter
-    console.log('\nLlamando a OpenRouter API...');
+    // 3. Llamar a la API de IA
+    console.log('\nLlamando a la API de IA...');
 
-    const { ok, data } = await callOpenRouter({
-      model: 'nvidia/nemotron-3.5-super-vl:free',
+    const { ok, data } = await callAI({
       messages: [
         {
           role: 'system',
@@ -160,15 +159,14 @@ RESPONDE ÚNICAMENTE CON UN OBJETO JSON en este formato exacto:
           content: prompt
         }
       ],
-      max_tokens: 800,
-      xTitle: 'Fundación OncoFeliz - Análisis Social'
+      max_tokens: 800
     });
 
     if (!ok) {
-      throw new Error(`Error from OpenRouter API: ${data.error?.message || 'Unknown error'}`);
+      throw new Error(`Error from AI provider: ${data.error?.message || 'Unknown error'}`);
     }
 
-    console.log('\nRespuesta de OpenRouter recibida');
+    console.log('\nRespuesta de la IA recibida');
 
     // 4. Extraer y parsear la respuesta
     const contenidoIA = data.choices[0].message.content;
@@ -319,11 +317,10 @@ INSTRUCCIONES:
 - Si no encuentras alguna información en el informe, usa null
 - El resumen ejecutivo debe ser comprensivo pero conciso`;
 
-    // 3. Llamar a la API de OpenRouter
-    console.log('\nLlamando a OpenRouter API para generar resumen...');
+    // 3. Llamar a la API de IA
+    console.log('\nLlamando a la API de IA para generar resumen...');
 
-    const { ok, data } = await callOpenRouter({
-      model: 'nvidia/nemotron-3.5-super-vl:free',
+    const { ok, data } = await callAI({
       messages: [
         {
           role: 'system',
@@ -334,15 +331,14 @@ INSTRUCCIONES:
           content: prompt
         }
       ],
-      max_tokens: 2500,
-      xTitle: 'Fundación OncoFeliz - Resumen de Caso'
+      max_tokens: 2500
     });
 
     if (!ok) {
-      throw new Error(`Error from OpenRouter API: ${data.error?.message || 'Unknown error'}`);
+      throw new Error(`Error from AI provider: ${data.error?.message || 'Unknown error'}`);
     }
 
-    console.log('\nRespuesta de OpenRouter recibida');
+    console.log('\nRespuesta de la IA recibida');
 
     // 4. Extraer y parsear la respuesta
     const contenidoIA = data.choices[0].message.content;

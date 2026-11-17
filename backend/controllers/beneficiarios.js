@@ -1069,7 +1069,7 @@ app.post("/registrar-ayuda", async (req, res) => {
       },
     });
 
-    res.status(201).json({ data: ayuda, mensaje: "Ayuda registrada correctamente" });
+    res.status(201).json({ success: true, data: ayuda, mensaje: "Ayuda registrada correctamente" });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ mensaje: "Error al registrar ayuda", error: error.message });
@@ -1087,7 +1087,7 @@ app.get("/historial-ayudas/:beneficiarioId", async (req, res) => {
       orderBy: { fechaAyuda: "desc" },
     });
 
-    res.json({ data: ayudas, mensaje: "Historial obtenido" });
+    res.json({ success: true, data: ayudas, mensaje: "Historial obtenido" });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ mensaje: "Error al obtener historial", error: error.message });
@@ -1108,7 +1108,7 @@ app.post("/sesion-quimioterapia", async (req, res) => {
       },
     });
 
-    res.status(201).json({ data: sesion, mensaje: "Sesión programada" });
+    res.status(201).json({ success: true, data: sesion, mensaje: "Sesión programada" });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ mensaje: "Error al programar sesión", error: error.message });
@@ -1130,7 +1130,7 @@ app.put("/sesion-quimioterapia/:sesionId", async (req, res) => {
       },
     });
 
-    res.json({ data: sesion, mensaje: "Sesión actualizada" });
+    res.json({ success: true, data: sesion, mensaje: "Sesión actualizada" });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ mensaje: "Error al actualizar sesión", error: error.message });
@@ -1148,7 +1148,7 @@ app.put("/estado-beneficiario/:beneficiarioId", async (req, res) => {
       data: { estadoBeneficiario },
     });
 
-    res.json({ data: beneficiario, mensaje: "Estado actualizado" });
+    res.json({ success: true, data: beneficiario, mensaje: "Estado actualizado" });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ mensaje: "Error al actualizar estado", error: error.message });

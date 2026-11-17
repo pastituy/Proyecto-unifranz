@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -341,7 +341,7 @@ model CodigoVerificacion {
 model WhatsappTemplate {
   id          Int      @id @default(autoincrement())
   codigo      String   @unique
-  plantilla   String   @db.Text
+  plantilla   String
   descripcion String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -350,6 +350,7 @@ model WhatsappTemplate {
 }
 
 enum Rol {
+  SUPER_ADMIN
   ADMINISTRADOR
   PSICOLOGO
   TRABAJADOR_SOCIAL

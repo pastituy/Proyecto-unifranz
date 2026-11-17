@@ -1,17 +1,19 @@
 /**
- * Controlador de IA (OpenRouter)
- * Maneja las peticiones a servicios de IA para generación de contenido
+ * Controlador de IA
+ * Maneja las peticiones a servicios de IA para generación de contenido.
+ * El proveedor (Gemini, OpenAI, OpenRouter, etc.) se configura por completo
+ * vía las variables de entorno AI_BASE_URL, AI_API_KEY y AI_MODEL.
  */
 
-const { callOpenRouter } = require('../services/openRouterService');
+const { callAI, extractErrorMessage } = require('../services/aiService');
 
 /**
- * Genera contenido usando OpenRouter AI
+ * Genera contenido usando el proveedor de IA configurado
  * @route POST /api/ai/generate
  */
 const generateContent = async (req, res) => {
   try {
-    const { messages, model = "moonshotai/kimi-k2" } = req.body;
+    const { messages, model } = req.body;
 
     // Validar que se envíen mensajes
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
@@ -22,11 +24,10 @@ const generateContent = async (req, res) => {
     }
 
     try {
-      const { ok, status, data } = await callOpenRouter({
+      const { ok, status, data } = await callAI({
         model,
         messages,
-        max_tokens: 1200,
-        xTitle: 'OncoFeliz - Fundación'
+        max_tokens: 1200
       });
 
       if (!ok) {
@@ -48,8 +49,8 @@ const generateContent = async (req, res) => {
 
         return res.status(status).json({
           success: false,
-          mensaje: data.error?.message || "Error al generar contenido",
-          error: data.error
+          mensaje: extractErrorMessage(data) || "Error al generar contenido",
+          error: data
         });
       }
 
@@ -121,9 +122,9 @@ IMPORTANTE:
       }
     ];
 
-    // Reutilizar la función de generación
+    // Reutilizar la función de generación (usa el modelo por defecto del .env)
     req.body.messages = messages;
-    req.body.model = "moonshotai/kimi-k2";
+    delete req.body.model;
 
     return await generateContent(req, res);
 
@@ -141,24 +142,23 @@ const completion = async (req, res) => {
     const { model, messages, stream, max_tokens } = req.body;
 
     // 1. Validación de Entrada
-    if (!model || !messages) {
+    if (!messages) {
       return res.status(400).json({
         success: false,
-        error: "Los parámetros 'model' y 'messages' son requeridos."
+        error: "El parámetro 'messages' es requerido."
       });
     }
 
-    const { ok, status, data } = await callOpenRouter({
+    const { ok, status, data } = await callAI({
       model,
       messages,
-      max_tokens: max_tokens || 1024,
-      xTitle: 'Baneco Chatbot'
+      max_tokens: max_tokens || 1024
     });
 
     if (!ok) {
       return res.status(status).json({
         success: false,
-        error: `Error del servicio de IA: ${data.error?.message || 'Unknown error'}`,
+        error: `Error del servicio de IA: ${extractErrorMessage(data) || 'Unknown error'}`,
         details: data
       });
     }

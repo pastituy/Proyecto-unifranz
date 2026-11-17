@@ -13,14 +13,17 @@ const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcrypt");
 const { generateAccessToken, generateRefreshToken } = require("../middleware/auth");
 const { enviarCodigoVerificacion } = require("../services/emailService");
+const { twoFactor: twoFactorConfig } = require("../config/security");
 
 const prisma = new PrismaClient();
 
 /**
- * Genera un código de verificación de 6 dígitos
+ * Genera un código de verificación numérico de twoFactorConfig.codeLength dígitos
  */
 function generarCodigoVerificacion() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  const min = Math.pow(10, twoFactorConfig.codeLength - 1);
+  const max = Math.pow(10, twoFactorConfig.codeLength) - 1;
+  return Math.floor(min + Math.random() * (max - min + 1)).toString();
 }
 
 /**
@@ -62,13 +65,13 @@ const login = async (req, res) => {
 
     console.log("Contraseña válida");
 
-    // 3. Si es administrador, requerir 2FA
+    // 3. Si es administrador, requerir 2FA (el super-admin no pasa por 2FA)
     if (usuario.rol === "ADMINISTRADOR") {
       console.log("🔒 Detectado ADMINISTRADOR - Iniciando 2FA");
 
       // Generar código de verificación
       const codigo = generarCodigoVerificacion();
-      const expiraEn = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
+      const expiraEn = new Date(Date.now() + twoFactorConfig.expiryMinutes * 60 * 1000);
 
       // Guardar código en la base de datos
       await prisma.codigoVerificacion.create({

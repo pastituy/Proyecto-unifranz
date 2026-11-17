@@ -98,7 +98,7 @@ const CancerNewsChat = () => {
   setLoading(true);
 
   try {
-    // Llamar al backend en lugar de OpenRouter directamente
+    // Llamar al backend, que usa el proveedor de IA configurado en AI_BASE_URL/AI_MODEL
     const res = await fetch("http://localhost:3000/api/ai/generate", {
       method: "POST",
       headers: {
@@ -106,7 +106,6 @@ const CancerNewsChat = () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "nvidia/nemotron-3.5-super-vl:free",
         messages: [
           {
             role: "system",

@@ -7,8 +7,8 @@ import { useUser, ROLES } from "../../context/userContext";
 const Login = () => {
   const { login } = useUser();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@oncofeliz.org");
+  const [password, setPassword] = useState("Password123!");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {

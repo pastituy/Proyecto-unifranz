@@ -30,6 +30,7 @@ const Donaciones = require("./controllers/donaciones");
 const Evento = require("./controllers/evento");
 const Paciente = require("./controllers/paciente");
 const Padre = require("./controllers/padre");
+const Recuperados = require("./controllers/recuperados");
 const campana = require("./controllers/campana");
 const usuarioCompana = require("./controllers/usuarioCompana");
 const login = require("./controllers/login");
@@ -170,13 +171,17 @@ app.use("/api/perfil", perfilRoutes);
 const psicologiaRoutes = require("./routes/psicologia.routes");
 app.use("/api/psicologia", psicologiaRoutes);
 
-// ✅ IA (OpenRouter) - NUEVO
+// ✅ IA - NUEVO
 const aiRoutes = require("./routes/ai.routes");
 app.use("/api/ai", aiRoutes);
 
 // ✅ WhatsApp Templates - NUEVO
 const whatsappTemplateRoutes = require("./routes/whatsappTemplateRoutes");
 app.use("/api/whatsapp-templates", authenticateToken, whatsappTemplateRoutes);
+
+// ✅ Contacto público - NUEVO
+const contactRoutes = require("./routes/contact.routes");
+app.use("/api/contact", contactRoutes);
 
 
 // Pendientes de migración:
@@ -211,6 +216,7 @@ app.use(Donaciones);
 app.use(Evento);
 app.use(Paciente);
 app.use(Padre);
+app.use(Recuperados);
 app.use(Beneficiarios);
 app.use(psicologo);
 app.use(TrabajoSocial);

@@ -1,5 +1,13 @@
 {
+  "scripts": {
+    "backend": "bun --cwd=backend run dev",
+    "frontend": "bun --cwd=frontend run dev",
+    "dev": "concurrently -n backend,frontend -c blue,green \"bun run backend\" \"bun run frontend\""
+  },
   "dependencies": {
     "stream-browserify": "^3.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.4"
   }
 }

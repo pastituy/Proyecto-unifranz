@@ -5,9 +5,10 @@ const router = express.Router();
 
 class FacebookZapierController {
   constructor() {
-    this.zapierWebhookURL =
-      process.env.ZAPIER_FACEBOOK_WEBHOOK_URL ||
-      "https://hooks.zapier.com/hooks/catch/24344172/uzglyqj/";
+    this.zapierWebhookURL = process.env.ZAPIER_FACEBOOK_WEBHOOK_URL;
+    if (!this.zapierWebhookURL) {
+      console.warn('⚠️ ZAPIER_FACEBOOK_WEBHOOK_URL no está configurado en .env');
+    }
     // Almacén de publicaciones programadas (en memoria)
     this.scheduledPosts = new Map();
     this.postIdCounter = 1;
@@ -15,6 +16,10 @@ class FacebookZapierController {
 
   // Método interno para enviar a Zapier
   async sendToZapier(data) {
+    if (!this.zapierWebhookURL) {
+      throw new Error('ZAPIER_FACEBOOK_WEBHOOK_URL no está configurado en .env');
+    }
+
     const zapierData = {
       Message: data.message,
       Photo: data.photo || "",
@@ -39,6 +44,13 @@ class FacebookZapierController {
         return res.status(400).json({
           success: false,
           error: "El mensaje es requerido",
+        });
+      }
+
+      if (!this.zapierWebhookURL) {
+        return res.status(500).json({
+          success: false,
+          error: "ZAPIER_FACEBOOK_WEBHOOK_URL no está configurado en .env",
         });
       }
 
@@ -93,6 +105,13 @@ class FacebookZapierController {
 
   async testConnection(req, res) {
     try {
+      if (!this.zapierWebhookURL) {
+        return res.status(500).json({
+          success: false,
+          error: "ZAPIER_FACEBOOK_WEBHOOK_URL no está configurado en .env",
+        });
+      }
+
       const testData = {
         test: true,
         message: "Prueba de conexión desde Express",

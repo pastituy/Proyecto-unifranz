@@ -4,7 +4,7 @@
  */
 
 const { body, param, query, validationResult } = require('express-validator');
-const { password: passwordPolicy } = require('../config/security');
+const { password: passwordPolicy, twoFactor: twoFactorConfig } = require('../config/security');
 
 /**
  * Middleware para manejar errores de validación
@@ -242,7 +242,8 @@ const validate2FACode = [
 
   body('codigo')
     .notEmpty().withMessage('El código es requerido')
-    .isLength({ min: 6, max: 6 }).withMessage('El código debe tener 6 dígitos')
+    .isLength({ min: twoFactorConfig.codeLength, max: twoFactorConfig.codeLength })
+    .withMessage(`El código debe tener ${twoFactorConfig.codeLength} dígitos`)
     .isNumeric().withMessage('El código debe ser numérico'),
 
   handleValidationErrors
@@ -303,6 +304,31 @@ const validateSearch = [
 ];
 
 /**
+ * Validaciones para Formulario de Contacto (público)
+ */
+const validateContacto = [
+  body('nombre')
+    .trim()
+    .notEmpty().withMessage('El nombre es requerido')
+    .isLength({ min: 2, max: 100 }).withMessage('El nombre debe tener entre 2 y 100 caracteres')
+    .escape(),
+
+  body('email')
+    .trim()
+    .notEmpty().withMessage('El email es requerido')
+    .isEmail().withMessage('Debe ser un email válido')
+    .normalizeEmail(),
+
+  body('mensaje')
+    .trim()
+    .notEmpty().withMessage('El mensaje es requerido')
+    .isLength({ min: 5, max: 2000 }).withMessage('El mensaje debe tener entre 5 y 2000 caracteres')
+    .escape(),
+
+  handleValidationErrors
+];
+
+/**
  * Sanitización general para prevenir XSS
  */
 const sanitizeBody = (fields) => {
@@ -316,6 +342,7 @@ module.exports = {
   validateLogin,
   validateRegister,
   validateDonation,
+  validateContacto,
   validatePatient,
   validateEvent,
   validateId,

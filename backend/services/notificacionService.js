@@ -87,11 +87,19 @@ const enviarWhatsApp = async (nombre, estado, telefono) => {
       throw new Error('WHATSAPP_API_KEY no está configurado en las variables de entorno');
     }
 
-    // TEMPORAL: Enviar siempre al número de prueba
-    const telefonoFormateado = '+59179397462';
-    console.log('⚠️ MODO PRUEBA: Enviando a número de prueba:', telefonoFormateado);
-    console.log('📞 (Teléfono real que se usaría en producción:', telefono + ')');
-    console.log('📞 Teléfono formateado:', telefonoFormateado);
+    // WHATSAPP_TEST_MODE=true (default) fuerza el envío a WHATSAPP_TEST_PHONE en vez
+    // del teléfono real, útil para no notificar a beneficiarios reales en desarrollo.
+    const testMode = process.env.WHATSAPP_TEST_MODE !== 'false';
+    const telefonoFormateado = testMode
+      ? (process.env.WHATSAPP_TEST_PHONE || '+59179397462')
+      : formatearTelefono(telefono);
+
+    if (testMode) {
+      console.log('⚠️ MODO PRUEBA: Enviando a número de prueba:', telefonoFormateado);
+      console.log('📞 (Teléfono real que se usaría en producción:', telefono + ')');
+    } else {
+      console.log('📞 Teléfono formateado:', telefonoFormateado);
+    }
 
     // Generar mensaje desde la plantilla
     console.log('📝 Generando mensaje desde template...');
@@ -115,7 +123,7 @@ const enviarWhatsApp = async (nombre, estado, telefono) => {
 
     // Realizar petición a la API
     const response = await axios.post(
-      'https://901.factura.com.bo/as/whatsapp/send',
+      process.env.WHATSAPP_API_URL || 'https://901.factura.com.bo/as/whatsapp/send',
       payload,
       {
         headers: {

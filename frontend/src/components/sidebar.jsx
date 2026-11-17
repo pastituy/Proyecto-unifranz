@@ -39,103 +39,138 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
   // Configuración de navegación por roles
   const getNavigationItems = () => {
-    const baseItems = {
-      // Items para Administrador - acceso completo
-      ADMINISTRADOR: [
-        {
-          path: "/dasboard/beneficiarios",
-          icon: <FaFileAlt />,
-          text: "Evaluación Casos",
-        },
-        {
-          path: "/dasboard/eventos",
-          icon: <EventIcon />,
-          text: "Eventos",
-        },
-        {
-          path: "/dasboard/campana",
-          icon: <CampaignIcon />,
-          text: "Campañas",
-        },
-        {
-          path: "/dasboard/usuario",
-          icon: <FaUserPlus />,
-          text: "Usuarios",
-        },
-        {
-          path: "/dasboard/donaciones",
-          icon: <FaMoneyBill />,
-          text: "Donaciones",
-        },
-        {
-          path: "/dasboard/chat",
-          icon: <HiChat />,
-          text: "Chat",
-        },
-        {
-          path: "/dasboard/redes",
-          icon: <FaInternetExplorer />,
-          text: "Redes Sociales",
-        },
-        {
-          path: "/dasboard/notificaciones-ws",
-          icon: <HiChat />,
-          text: "Notificaciones WS",
-        },
-      ],
+    // Items exclusivos de Administrador
+    const adminOnlyItems = [
+      {
+        path: "/dasboard/beneficiarios",
+        icon: <FaFileAlt />,
+        text: "Evaluación Casos",
+      },
+      {
+        path: "/dasboard/eventos",
+        icon: <EventIcon />,
+        text: "Eventos",
+      },
+      {
+        path: "/dasboard/campana",
+        icon: <CampaignIcon />,
+        text: "Campañas",
+      },
+      {
+        path: "/dasboard/usuario",
+        icon: <FaUserPlus />,
+        text: "Usuarios",
+      },
+      {
+        path: "/dasboard/donaciones",
+        icon: <FaMoneyBill />,
+        text: "Donaciones",
+      },
+      {
+        path: "/dasboard/chat",
+        icon: <HiChat />,
+        text: "Chat",
+      },
+      {
+        path: "/dasboard/redes",
+        icon: <FaInternetExplorer />,
+        text: "Redes Sociales",
+      },
+      {
+        path: "/dasboard/notificaciones-ws",
+        icon: <HiChat />,
+        text: "Notificaciones WS",
+      },
+    ];
 
-      // Items para Psicólogo
-      PSICOLOGO: [
-        {
-          path: "/dasboard/psicologo",
-          icon: <FaUserMd />,
-          text: "Evaluación Psicológica",
-        },
-      ],
+    // Items para Psicólogo
+    const psicologoItems = [
+      {
+        path: "/dasboard/psicologo",
+        icon: <FaUserMd />,
+        text: "Evaluación Psicológica",
+      },
+      {
+        path: "/dasboard/chat",
+        icon: <HiChat />,
+        text: "Chat",
+      },
+    ];
 
-      // Items para Trabajador Social
-      TRABAJADOR_SOCIAL: [
-        {
-          path: "/dasboard/trabajadorSocial",
-          icon: <FaClipboardList />,
-          text: "Registrar Casos",
-        },
-        {
-          path: "/dasboard/trabajadorSocial/beneficiarios",
-          icon: <FaUsers />,
-          text: "Mis Beneficiarios",
-        },
-        {
-          path: "/dasboard/trabajadorSocial/reportes",
-          icon: <FaFileAlt />,
-          text: "Historial de Ayudas",
-        },
-      ],
+    // Items para Trabajador Social
+    const trabajadorSocialItems = [
+      {
+        path: "/dasboard/trabajadorSocial",
+        icon: <FaClipboardList />,
+        text: "Registrar Casos",
+      },
+      {
+        path: "/dasboard/trabajadorSocial/beneficiarios",
+        icon: <FaUsers />,
+        text: "Mis Beneficiarios",
+      },
+      {
+        path: "/dasboard/trabajadorSocial/reportes",
+        icon: <FaFileAlt />,
+        text: "Historial de Ayudas",
+      },
+    ];
 
-      // Items para Asistente/Coordinador
-      ASISTENTE: [
-        {
-          path: "/dasboard/asistente",
-          icon: <FaUsers />,
-          text: "Gestión Beneficiarios",
-        },
-        {
-          path: "/dasboard/asistente/solicitudes",
-          icon: <FaHandHoldingHeart />,
-          text: "Solicitudes de Ayuda",
-        },
-        {
-          path: "/dasboard/asistente/reportes",
-          icon: <FaFileAlt />,
-          text: "Reportes y Estadísticas",
-        },
-      ],
+    // Items para Asistente/Coordinador
+    const asistenteItems = [
+      {
+        path: "/dasboard/asistente",
+        icon: <FaUsers />,
+        text: "Gestión Beneficiarios",
+      },
+      {
+        path: "/dasboard/asistente/solicitudes",
+        icon: <FaHandHoldingHeart />,
+        text: "Solicitudes de Ayuda",
+      },
+      {
+        path: "/dasboard/asistente/reportes",
+        icon: <FaFileAlt />,
+        text: "Reportes y Estadísticas",
+      },
+    ];
+
+    // Agrupa por rol y evita repetir un mismo path en más de un grupo
+    // (ej. "Chat" existe tanto para Administrador como para Psicólogo)
+    const buildGroups = (groupsDef) => {
+      const seenPaths = new Set();
+      return groupsDef
+        .map(({ label, items }) => ({
+          label,
+          items: items.filter((item) => {
+            if (seenPaths.has(item.path)) return false;
+            seenPaths.add(item.path);
+            return true;
+          }),
+        }))
+        .filter((group) => group.items.length > 0);
     };
 
-    return baseItems[user?.rol] || baseItems.ADMINISTRADOR;
+    const groupsByRole = {
+      // Solo el super-admin ve todas las pantallas de todos los roles, agrupadas
+      SUPER_ADMIN: buildGroups([
+        { label: "Administración", items: adminOnlyItems },
+        { label: "Psicólogo", items: psicologoItems },
+        { label: "Trabajador Social", items: trabajadorSocialItems },
+        { label: "Asistente", items: asistenteItems },
+      ]),
+      // El administrador vuelve a ver solo lo suyo, como antes
+      ADMINISTRADOR: buildGroups([{ label: "Administración", items: adminOnlyItems }]),
+      PSICOLOGO: buildGroups([{ label: "Psicólogo", items: psicologoItems }]),
+      TRABAJADOR_SOCIAL: buildGroups([{ label: "Trabajador Social", items: trabajadorSocialItems }]),
+      ASISTENTE: buildGroups([{ label: "Asistente", items: asistenteItems }]),
+    };
+
+    return groupsByRole[user?.rol] || groupsByRole.ADMINISTRADOR;
   };
 
-  const navigationItems = getNavigationItems();
+  const navigationGroups = getNavigationItems();
+  const showGroupLabels = navigationGroups.length > 1;
 
   return (
     <SidebarContainer $collapsed={collapsed} $isOpen={isOpen}>
@@ -161,18 +196,25 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       )}
 
       <NavMenu>
-        {navigationItems.map((item, index) => (
-          <NavItem
-            key={index}
-            $active={isActive(item.path)}
-            onClick={() => handleNavigation(item.path)}
-          >
-            <NavIconWrapper $active={isActive(item.path)}>
-              {item.icon}
-            </NavIconWrapper>
-            {!collapsed && <NavText>{item.text}</NavText>}
-            {!collapsed && isActive(item.path) && <ActiveIndicator />}
-          </NavItem>
+        {navigationGroups.map((group) => (
+          <NavGroup key={group.label}>
+            {showGroupLabels && !collapsed && (
+              <NavGroupLabel>{group.label}</NavGroupLabel>
+            )}
+            {group.items.map((item) => (
+              <NavItem
+                key={item.path}
+                $active={isActive(item.path)}
+                onClick={() => handleNavigation(item.path)}
+              >
+                <NavIconWrapper $active={isActive(item.path)}>
+                  {item.icon}
+                </NavIconWrapper>
+                {!collapsed && <NavText>{item.text}</NavText>}
+                {!collapsed && isActive(item.path) && <ActiveIndicator />}
+              </NavItem>
+            ))}
+          </NavGroup>
         ))}
       </NavMenu>
 
@@ -415,17 +457,32 @@ const UserInfoRole = styled.span`
   width: fit-content;
 `;
 
-const NavMenu = styled.ul`
-  list-style: none;
+const NavMenu = styled.nav`
   padding: 0 1rem;
   margin: 0.5rem 0;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  gap: 16px;
+`;
+
+const NavGroup = styled.div`
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 `;
 
-const NavItem = styled.li`
+const NavGroupLabel = styled.span`
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #a0aec0;
+  padding: 0 10px;
+  margin-bottom: 2px;
+`;
+
+const NavItem = styled.div`
   display: flex;
   align-items: center;
   padding: ${(props) => (props.$active ? "8px 10px" : "8px 10px")};

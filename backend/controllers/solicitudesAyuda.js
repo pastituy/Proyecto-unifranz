@@ -102,9 +102,11 @@ app.get("/solicitudes-ayuda/:id", async (req, res) => {
       include: {
         beneficiario: {
           include: {
-            pacienteRegistro: true,
-            evaluacionPsicologica: true,
-            evaluacionSocial: true,
+            pacienteRegistro: {
+              include: {
+                evaluacionSocial: true,
+              },
+            },
           },
         },
         solicitadoPor: {

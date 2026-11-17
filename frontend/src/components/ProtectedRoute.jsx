@@ -60,6 +60,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     );
   }
 
+  // El super-admin tiene acceso a todas las rutas protegidas
+  if (user.rol === ROLES.SUPER_ADMIN) {
+    return children;
+  }
+
   // Si se especifican roles permitidos, verificar que el usuario tenga uno de ellos
   if (allowedRoles && !allowedRoles.includes(user.rol)) {
     return (

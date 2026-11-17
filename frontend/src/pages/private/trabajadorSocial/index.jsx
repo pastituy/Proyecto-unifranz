@@ -266,9 +266,11 @@ const TrabajoSocial = () => {
       formData.append(key, evaluacionForm[key]);
     });
 
-    // Si ya se analizó el PDF, enviar el nombre del archivo
+    // Si ya se analizó el PDF, reutilizar el archivo ya subido; si no, subir el PDF ahora
     if (nombreArchivoPdf) {
       formData.append("nombreArchivoPdf", nombreArchivoPdf);
+    } else if (pdfFile) {
+      formData.append("informeSocialPdf", pdfFile);
     }
 
     // Enviar las observaciones generadas por la IA

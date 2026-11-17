@@ -46,6 +46,7 @@ window.fetch = async (input, init = {}) => {
 
 // Roles permitidos
 export const ROLES = {
+  SUPER_ADMIN: "SUPER_ADMIN",
   ADMINISTRADOR: "ADMINISTRADOR",
   PSICOLOGO: "PSICOLOGO",
   TRABAJADOR_SOCIAL: "TRABAJADOR_SOCIAL",

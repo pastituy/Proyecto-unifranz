@@ -20,6 +20,11 @@ const requireRole = (allowedRoles) => {
         });
       }
 
+      // El super-admin siempre tiene acceso, sin importar los roles permitidos
+      if (req.user.rol === roles.SUPER_ADMIN || req.user.tipo === roles.SUPER_ADMIN) {
+        return next();
+      }
+
       // Convertir a array si es un solo rol
       const rolesArray = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
 
@@ -115,8 +120,8 @@ const requireOwnership = (paramName = 'id') => {
 
       const userRole = req.user.rol || req.user.tipo;
 
-      // Admin puede acceder a todo
-      if (userRole === roles.ADMIN) {
+      // Super-admin y administrador pueden acceder a todo (comportamiento original del admin)
+      if (userRole === roles.SUPER_ADMIN || userRole === roles.ADMIN) {
         return next();
       }
 
@@ -158,6 +163,12 @@ const requireRoleOrOwnership = (allowedRoles, paramName = 'id') => {
       }
 
       const userRole = req.user.rol || req.user.tipo;
+
+      // El super-admin siempre tiene acceso
+      if (userRole === roles.SUPER_ADMIN) {
+        return next();
+      }
+
       const rolesArray = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
 
       // Verificar si tiene el rol permitido
@@ -187,9 +198,14 @@ const requireRoleOrOwnership = (allowedRoles, paramName = 'id') => {
 };
 
 /**
- * Middleware para solo administradores
+ * Middleware para solo administradores (el super-admin también pasa, por el bypass de requireRole)
  */
 const requireAdmin = requireRole(roles.ADMIN);
+
+/**
+ * Middleware para solo super-administradores
+ */
+const requireSuperAdmin = requireRole(roles.SUPER_ADMIN);
 
 /**
  * Middleware para profesionales (psicólogo o trabajador social)
@@ -212,8 +228,8 @@ const requireAssignment = (idParamName = 'id') => {
 
       const userRole = req.user.rol || req.user.tipo;
 
-      // Admin puede acceder a todo
-      if (userRole === roles.ADMIN) {
+      // Super-admin y administrador pueden acceder a todo (comportamiento original del admin)
+      if (userRole === roles.SUPER_ADMIN || userRole === roles.ADMIN) {
         return next();
       }
 
@@ -253,6 +269,7 @@ module.exports = {
   requireOwnership,
   requireRoleOrOwnership,
   requireAdmin,
+  requireSuperAdmin,
   requireProfessional,
   requireAssignment,
   roles // Exportar roles para uso en rutas

@@ -6,6 +6,21 @@ const prisma = new PrismaClient();
 async function main() {
   const hashedPassword = await bcrypt.hash("123456", 10);
 
+  // Usuario Super Administrador (acceso total, sin 2FA)
+  await prisma.usuario.upsert({
+    where: { email: "superadmin@oncofeliz.com" },
+    update: { password: hashedPassword },
+    create: {
+      nombre: "Super Administrador",
+      email: "superadmin@oncofeliz.com",
+      telefono: "+591 90000000",
+      pais: "Bolivia",
+      password: hashedPassword,
+      ci: "10000009",
+      rol: "SUPER_ADMIN",
+    },
+  });
+
   // Usuario Administrador
   await prisma.usuario.upsert({
     where: { email: "admin@oncofeliz.com" },
@@ -434,7 +449,57 @@ async function main() {
     },
   });
 
+  // ================================
+  // HISTORIAS DE RECUPERACIÓN (sección pública)
+  // ================================
+  // Usa el modelo legacy Padre -> Paciente -> Recuperados (independiente
+  // del flujo de PacienteRegistro/Beneficiario de arriba).
+  const yaHayRecuperados = await prisma.recuperados.count();
+  if (yaHayRecuperados === 0) {
+    const historiasRecuperacion = [
+      {
+        padre: { nombre: "Rosa", apellido: "Mamani", telefono: "70011223", ci: "5551001", ubicacion: "Cochabamba" },
+        paciente: { nombre: "Valentina", apellido: "Mamani", ciudad: "Cochabamba", tipoCancer: "Leucemia Linfoblástica Aguda", edad: 8 },
+        recuperado: {
+          diagnosis: "Leucemia Linfoblástica Aguda (LLA)",
+          image: "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400",
+          quote: "Hoy puedo volver a jugar con mis amigas y eso es lo que más feliz me hace.",
+          recovered: "2 años en remisión completa",
+        },
+      },
+      {
+        padre: { nombre: "Carlos", apellido: "Quispe", telefono: "70022334", ci: "5551002", ubicacion: "Santa Cruz" },
+        paciente: { nombre: "Mateo", apellido: "Quispe", ciudad: "Santa Cruz", tipoCancer: "Linfoma de Hodgkin", edad: 11 },
+        recuperado: {
+          diagnosis: "Linfoma de Hodgkin",
+          image: "https://images.unsplash.com/photo-1522771930-78848d9293e8?w=400",
+          quote: "La fundación estuvo con mi familia en los momentos más difíciles.",
+          recovered: "1 año y medio en remisión",
+        },
+      },
+      {
+        padre: { nombre: "Elena", apellido: "Flores", telefono: "70033445", ci: "5551003", ubicacion: "La Paz" },
+        paciente: { nombre: "Santiago", apellido: "Flores", ciudad: "La Paz", tipoCancer: "Tumor de Wilms", edad: 6 },
+        recuperado: {
+          diagnosis: "Tumor de Wilms",
+          image: "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400",
+          quote: "Gracias a todos los que donaron, ahora puedo ir a la escuela sin miedo.",
+          recovered: "3 años en remisión completa",
+        },
+      },
+    ];
+
+    for (const h of historiasRecuperacion) {
+      const padre = await prisma.padre.create({ data: h.padre });
+      const paciente = await prisma.paciente.create({ data: { ...h.paciente, idPadre: padre.id } });
+      await prisma.recuperados.create({ data: { ...h.recuperado, idPaciente: paciente.id } });
+    }
+
+    console.log(`✅ ${historiasRecuperacion.length} historias de recuperación creadas`);
+  }
+
   console.log("✅ Seed completado exitosamente.");
+  console.log("📧 Super Administrador: superadmin@oncofeliz.com | Contraseña: 123456");
   console.log("📧 Administrador: admin@oncofeliz.com | Contraseña: 123456");
   console.log("📧 Trabajador Social: trabajador@oncofeliz.com | Contraseña: 123456");
   console.log("📧 Psicólogo: psicologo@oncofeliz.com | Contraseña: 123456");

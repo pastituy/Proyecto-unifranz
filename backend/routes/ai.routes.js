@@ -1,5 +1,5 @@
 /**
- * Rutas de IA (OpenRouter)
+ * Rutas de IA
  * Endpoints para generación de contenido con IA
  */
 
@@ -27,10 +27,9 @@ router.post('/generate',
 /**
  * POST /api/ai/chat
  * Chat especializado en información sobre cáncer
- * Requiere autenticación
+ * Público (lo usa el widget de chat visible en todas las vistas, incluso sin sesión)
  */
 router.post('/chat',
-  authenticateToken,
   apiLimiter,
   chatCancer
 );
