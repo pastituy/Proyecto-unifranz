@@ -10,17 +10,16 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LayoutAdmin from "./pages/private/layout";
 import Events from "./pages/private/eventos";
 import Camp from "./pages/private/campana";
-import Noticias from "./pages/private/noticias";
 import Usuario from "./pages/private/usuario";
 import Donaciones from "./pages/private/donaciones";
 import CancerNewsChat from "./pages/private/chat";
 import Redes from "./pages/private/redes";
+import NotificacionesWS from "./pages/private/notificacionesWS";
 import Psicologo from "./pages/private/psicologo";
 import TrabajoSocial from "./pages/private/trabajadorSocial";
 import Asistente from "./pages/private/asistente";
 import AdminBeneficiarios from "./pages/private/adminBeneficiarios";
 import TrabajadorSocialBeneficiarios from "./pages/private/trabajadorSocial/beneficiarios";
-import PsicologoBeneficiarios from "./pages/private/psicologo/beneficiarios";
 import AsistenteSolicitudes from "./pages/private/asistente/solicitudes";
 import AsistenteReportes from "./pages/private/asistente/reportes";
 import TrabajadorSocialReportes from "./pages/private/trabajadorSocial/reportes";
@@ -62,7 +61,6 @@ const AppContent = () => {
       <ThemeProvider theme={theme}>
         {/*<Navbar />
       <HeroSection />
-      <BlogSection />
       <Eventos />
       <CasosRecuperados />
       <Campanas />
@@ -94,7 +92,7 @@ const AppContent = () => {
               <Route
                 path="/dasboard/chat"
                 element={
-                  <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR, ROLES.PSICOLOGO]}>
+                  <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
                     <CancerNewsChat />
                   </ProtectedRoute>
                 }
@@ -118,14 +116,6 @@ const AppContent = () => {
                 }
               />
               <Route
-                path="/dasboard/noticias"
-                element={
-                  <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
-                    <Noticias />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
                 path="/dasboard/usuario"
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
@@ -138,6 +128,14 @@ const AppContent = () => {
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
                     <Redes />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dasboard/notificaciones-ws"
+                element={
+                  <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
+                    <NotificacionesWS />
                   </ProtectedRoute>
                 }
               />
@@ -175,14 +173,6 @@ const AppContent = () => {
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.PSICOLOGO]}>
                     <Psicologo />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dasboard/psicologo/beneficiarios"
-                element={
-                  <ProtectedRoute allowedRoles={[ROLES.PSICOLOGO]}>
-                    <PsicologoBeneficiarios />
                   </ProtectedRoute>
                 }
               />

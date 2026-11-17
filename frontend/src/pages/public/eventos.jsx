@@ -11,18 +11,16 @@ import {
   EventTitle,
   EventLocation,
   EventTime,
-  EventButton,
   TitleAccent,
   SectionHeader,
   IconContainer,
 } from "../../styles/styleEvento";
-import { useNavigate } from "react-router-dom";
+
 const Eventos = () => {
   const [events, setEvents] = useState([]);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const navigate = useNavigate();
   const eventosPorPagina = 3;
 
   useEffect(() => {
@@ -173,9 +171,6 @@ const Eventos = () => {
 
     fetchEvents();
   }, []);
-  const handleClick = () => {
-    navigate("/register");
-  };
 
   const startIndex = page * eventosPorPagina;
   const eventosMostrados = events.slice(
@@ -286,7 +281,6 @@ const Eventos = () => {
                 </IconContainer>
                 {event.location}
               </EventLocation>
-              <EventButton onClick={handleClick}>Inscribirme</EventButton>
             </EventContent>
           </EventCard>
         ))}

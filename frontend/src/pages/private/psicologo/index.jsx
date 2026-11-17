@@ -1,107 +1,133 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
 import { useUser } from "../../../context/userContext";
-import { FaClipboardCheck, FaSearch, FaFilePdf, FaPaperPlane, FaEye, FaChild, FaUserMd } from "react-icons/fa";
+import { FaClipboardCheck, FaSearch, FaFilePdf, FaUpload, FaEye, FaChild, FaUserMd, FaCheckCircle, FaHourglassHalf } from "react-icons/fa";
+import PdfViewer from "../../../components/PdfViewer";
+import { useInformePsicologico } from "../../../hooks/useInformePsicologico";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const MAX_PDF_BYTES = 10 * 1024 * 1024;
+
+const formatFecha = (f) => (f ? new Date(f).toLocaleDateString() : "-");
 
 const Psicologo = () => {
-  const { user, token } = useUser();
-  const [casos, setCasos] = useState([]);
+  const { user, authFetch } = useUser();
+  const [derivaciones, setDerivaciones] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [tab, setTab] = useState("PENDIENTE");
 
   // Modales
-  const [showEvaluacionModal, setShowEvaluacionModal] = useState(false);
+  const [showInformeModal, setShowInformeModal] = useState(false);
   const [showDetalleModal, setShowDetalleModal] = useState(false);
-  const [selectedCaso, setSelectedCaso] = useState(null);
+  const [selected, setSelected] = useState(null);
 
-  // Form Evaluación Psicológica
+  // Formulario del informe
   const [observaciones, setObservaciones] = useState("");
   const [pdfFile, setPdfFile] = useState(null);
 
-  useEffect(() => {
-    fetchCasosPendientes();
-  }, []);
+  const { pdfViewer, abrirInforme, cerrarInforme } = useInformePsicologico(setError);
 
-  const fetchCasosPendientes = async () => {
+  const fetchDerivaciones = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/casos-pendientes-psicologia`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await authFetch(`${API_URL}/api/psicologia/derivaciones`);
       const data = await response.json();
       if (data.success) {
-        setCasos(data.data);
+        setDerivaciones(data.data);
+      } else {
+        setError(data.mensaje || "Error al cargar los casos derivados");
       }
     } catch (err) {
-      setError("Error al cargar los casos pendientes");
+      setError(err.message || "Error al cargar los casos derivados");
     } finally {
       setLoading(false);
     }
+  }, [authFetch]);
+
+  useEffect(() => {
+    fetchDerivaciones();
+  }, [fetchDerivaciones]);
+
+  const abrirFormulario = (derivacion) => {
+    setSelected(derivacion);
+    setObservaciones(derivacion.observaciones || "");
+    setPdfFile(null);
+    setError("");
+    setShowDetalleModal(false);
+    setShowInformeModal(true);
   };
 
-  const handleEvaluacionSubmit = async (e) => {
+  const cerrarFormulario = () => {
+    if (saving) return;
+    setShowInformeModal(false);
+    setPdfFile(null);
+    setObservaciones("");
+  };
+
+  const handlePdfChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    if (file && file.type !== "application/pdf") {
+      setError("El informe debe ser un archivo PDF");
+      e.target.value = "";
+      return;
+    }
+    if (file && file.size > MAX_PDF_BYTES) {
+      setError("El PDF no puede pesar más de 10 MB");
+      e.target.value = "";
+      return;
+    }
+    setError("");
+    setPdfFile(file);
+  };
+
+  const handleInformeSubmit = async (e) => {
     e.preventDefault();
     if (!pdfFile) {
       setError("Debe adjuntar el informe psicológico en PDF");
       return;
     }
 
-    setLoading(true);
+    setSaving(true);
     setError("");
-
     const formData = new FormData();
-    formData.append("pacienteRegistroId", selectedCaso.id);
-    formData.append("psicologoId", user.id);
+    formData.append("informePdf", pdfFile);
     formData.append("observaciones", observaciones);
-    formData.append("informePsicologicoPdf", pdfFile);
 
     try {
-      const response = await fetch(`${API_URL}/evaluacion-psicologica`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData
-      });
+      const response = await authFetch(
+        `${API_URL}/api/psicologia/derivaciones/${selected.id}/informe`,
+        { method: "PUT", body: formData }
+      );
       const data = await response.json();
       if (data.success) {
-        setSuccess("Evaluación psicológica guardada. Caso enviado a Administración.");
-        setShowEvaluacionModal(false);
-        resetForm();
-        fetchCasosPendientes();
+        setSuccess(`Informe psicológico de ${selected.pacienteRegistro.nombreCompletoNino} guardado.`);
+        setShowInformeModal(false);
+        setPdfFile(null);
+        setObservaciones("");
+        fetchDerivaciones();
         setTimeout(() => setSuccess(""), 4000);
       } else {
-        setError(data.error || "Error al guardar la evaluación");
+        setError(data.mensaje || "Error al guardar el informe");
       }
     } catch (err) {
-      setError("Error de conexión");
+      setError(err.message || "Error de conexión");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  const resetForm = () => {
-    setObservaciones("");
-    setPdfFile(null);
-  };
-
-  const filteredCasos = casos.filter(c =>
-    c.nombreCompletoNino.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.ciTutor.includes(searchTerm)
+  const pendientes = derivaciones.filter((d) => d.estado === "PENDIENTE");
+  const completadas = derivaciones.filter((d) => d.estado === "COMPLETADA");
+  const termino = searchTerm.toLowerCase();
+  const visibles = (tab === "PENDIENTE" ? pendientes : completadas).filter(
+    (d) =>
+      d.pacienteRegistro.nombreCompletoNino.toLowerCase().includes(termino) ||
+      d.pacienteRegistro.ciTutor.includes(searchTerm)
   );
-
-  const calcularEdad = (fechaNacimiento) => {
-    const hoy = new Date();
-    const nacimiento = new Date(fechaNacimiento);
-    let edad = hoy.getFullYear() - nacimiento.getFullYear();
-    const mes = hoy.getMonth() - nacimiento.getMonth();
-    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
-      edad--;
-    }
-    return edad;
-  };
 
   return (
     <Container>
@@ -121,22 +147,38 @@ const Psicologo = () => {
       <StatsContainer>
         <StatCard>
           <StatIcon color="#ff6347">
-            <FaClipboardCheck />
+            <FaHourglassHalf />
           </StatIcon>
           <StatInfo>
-            <StatNumber>{casos.length}</StatNumber>
-            <StatLabel>Casos Pendientes</StatLabel>
+            <StatNumber>{pendientes.length}</StatNumber>
+            <StatLabel>Informes pendientes</StatLabel>
+          </StatInfo>
+        </StatCard>
+        <StatCard>
+          <StatIcon color="#2e7d32">
+            <FaCheckCircle />
+          </StatIcon>
+          <StatInfo>
+            <StatNumber>{completadas.length}</StatNumber>
+            <StatLabel>Informes entregados</StatLabel>
           </StatInfo>
         </StatCard>
       </StatsContainer>
 
       <ContentArea>
         <ContentHeader>
-          <ContentTitle>Casos Pendientes de Evaluación Psicológica</ContentTitle>
+          <Tabs>
+            <TabButton $active={tab === "PENDIENTE"} onClick={() => setTab("PENDIENTE")}>
+              Pendientes ({pendientes.length})
+            </TabButton>
+            <TabButton $active={tab === "COMPLETADA"} onClick={() => setTab("COMPLETADA")}>
+              Entregados ({completadas.length})
+            </TabButton>
+          </Tabs>
           <SearchContainer>
             <FaSearch />
             <SearchInput
-              placeholder="Buscar por nombre o CI..."
+              placeholder="Buscar por nombre o CI del tutor..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -145,110 +187,125 @@ const Psicologo = () => {
 
         {loading ? (
           <LoadingSpinner>Cargando casos...</LoadingSpinner>
-        ) : filteredCasos.length === 0 ? (
+        ) : visibles.length === 0 ? (
           <EmptyState>
             <FaChild style={{ fontSize: "3rem", color: "#ccc", marginBottom: "16px" }} />
-            <p>No hay casos pendientes de evaluación psicológica</p>
+            <p>
+              {tab === "PENDIENTE"
+                ? "No hay casos derivados pendientes de informe"
+                : "Todavía no hay informes entregados"}
+            </p>
           </EmptyState>
         ) : (
           <CardsContainer>
-            {filteredCasos.map((caso) => (
-              <CasoCard key={caso.id}>
-                <CasoHeader>
-                  <CasoName>{caso.nombreCompletoNino}</CasoName>
-                  <CasoBadge>{caso.edad} años</CasoBadge>
-                </CasoHeader>
-                <CasoInfo>
-                  <InfoRow>
-                    <InfoLabel>Diagnóstico:</InfoLabel>
-                    <InfoValue>{caso.diagnostico}</InfoValue>
-                  </InfoRow>
-                  <InfoRow>
-                    <InfoLabel>Tutor:</InfoLabel>
-                    <InfoValue>{caso.nombreCompletoTutor}</InfoValue>
-                  </InfoRow>
-                  <InfoRow>
-                    <InfoLabel>Teléfono:</InfoLabel>
-                    <InfoValue>{caso.telefonoTutor}</InfoValue>
-                  </InfoRow>
-                  <InfoRow>
-                    <InfoLabel>Fecha Registro:</InfoLabel>
-                    <InfoValue>{new Date(caso.fechaRegistro).toLocaleDateString()}</InfoValue>
-                  </InfoRow>
-                  {caso.evaluacionSocial && (
-                    <VulnerabilityBox nivel={caso.evaluacionSocial.nivelVulnerabilidad}>
-                      <span>Vulnerabilidad:</span>
-                      <strong>{caso.evaluacionSocial.nivelVulnerabilidad}</strong>
-                      <span>({caso.evaluacionSocial.puntajeTotal}/100)</span>
-                    </VulnerabilityBox>
+            {visibles.map((d) => {
+              const caso = d.pacienteRegistro;
+              const puedeReemplazar = d.estado === "COMPLETADA" && d.psicologo?.id === user?.id;
+              return (
+                <CasoCard key={d.id}>
+                  <CasoHeader>
+                    <CasoName>{caso.nombreCompletoNino}</CasoName>
+                    <CasoBadge>{caso.edad} años</CasoBadge>
+                  </CasoHeader>
+                  <CasoInfo>
+                    <InfoRow>
+                      <InfoLabel>Diagnóstico:</InfoLabel>
+                      <InfoValue>{caso.diagnostico}</InfoValue>
+                    </InfoRow>
+                    <InfoRow>
+                      <InfoLabel>Tutor:</InfoLabel>
+                      <InfoValue>{caso.nombreCompletoTutor}</InfoValue>
+                    </InfoRow>
+                    <InfoRow>
+                      <InfoLabel>Derivado por:</InfoLabel>
+                      <InfoValue>{d.derivadoPor?.nombre} · {formatFecha(d.fechaDerivacion)}</InfoValue>
+                    </InfoRow>
+                    {d.estado === "COMPLETADA" && (
+                      <InfoRow>
+                        <InfoLabel>Informe:</InfoLabel>
+                        <InfoValue>{d.psicologo?.nombre} · {formatFecha(d.fechaInforme)}</InfoValue>
+                      </InfoRow>
+                    )}
+                    <MotivoBox>
+                      <strong>Motivo de la derivación:</strong> {d.motivo}
+                    </MotivoBox>
+                  </CasoInfo>
+                  <CasoActions>
+                    <ActionButton onClick={() => { setSelected(d); setShowDetalleModal(true); }}>
+                      <FaEye /> Ver detalle
+                    </ActionButton>
+                    {d.estado === "PENDIENTE" ? (
+                      <PrimaryActionButton onClick={() => abrirFormulario(d)}>
+                        <FaClipboardCheck /> Subir informe
+                      </PrimaryActionButton>
+                    ) : (
+                      <PrimaryActionButton onClick={() => abrirInforme(d, caso.nombreCompletoNino)}>
+                        <FaFilePdf /> Ver informe
+                      </PrimaryActionButton>
+                    )}
+                  </CasoActions>
+                  {puedeReemplazar && (
+                    <LinkButton onClick={() => abrirFormulario(d)}>
+                      <FaUpload /> Reemplazar informe
+                    </LinkButton>
                   )}
-                </CasoInfo>
-                <CasoActions>
-                  <ActionButton onClick={() => { setSelectedCaso(caso); setShowDetalleModal(true); }}>
-                    <FaEye /> Ver Detalle
-                  </ActionButton>
-                  <PrimaryActionButton onClick={() => { setSelectedCaso(caso); setShowEvaluacionModal(true); }}>
-                    <FaClipboardCheck /> Evaluar
-                  </PrimaryActionButton>
-                </CasoActions>
-              </CasoCard>
-            ))}
+                </CasoCard>
+              );
+            })}
           </CardsContainer>
         )}
       </ContentArea>
 
-      {/* Modal Evaluación Psicológica */}
-      <Modal show={showEvaluacionModal}>
+      {/* Modal Subir Informe */}
+      <Modal $show={showInformeModal}>
         <ModalContent>
           <ModalHeader>
-            <ModalTitle>Evaluación Psicológica</ModalTitle>
-            <CloseButton onClick={() => setShowEvaluacionModal(false)}>&times;</CloseButton>
+            <ModalTitle>
+              {selected?.estado === "COMPLETADA" ? "Reemplazar informe psicológico" : "Subir informe psicológico"}
+            </ModalTitle>
+            <CloseButton onClick={cerrarFormulario}>&times;</CloseButton>
           </ModalHeader>
-          {selectedCaso && (
-            <form onSubmit={handleEvaluacionSubmit}>
+          {selected && (
+            <form onSubmit={handleInformeSubmit}>
               <InfoBox>
-                <strong>Paciente:</strong> {selectedCaso.nombreCompletoNino}<br />
-                <strong>Edad:</strong> {selectedCaso.edad} años<br />
-                <strong>Diagnóstico:</strong> {selectedCaso.diagnostico}
+                <strong>Paciente:</strong> {selected.pacienteRegistro.nombreCompletoNino}<br />
+                <strong>Edad:</strong> {selected.pacienteRegistro.edad} años<br />
+                <strong>Diagnóstico:</strong> {selected.pacienteRegistro.diagnostico}
               </InfoBox>
 
               <NoteBox>
-                <strong>Nota:</strong> Por privacidad, no se muestra el informe social del Trabajador Social.
-                Usted debe realizar su evaluación psicológica de forma independiente.
+                <strong>Motivo de la derivación ({selected.derivadoPor?.nombre}):</strong> {selected.motivo}
               </NoteBox>
 
               <FormSection>
                 <SectionTitle>Informe Psicológico (PDF) *</SectionTitle>
                 <FileInput
+                  key={`${selected.id}-${showInformeModal}`}
                   type="file"
-                  accept=".pdf"
+                  accept="application/pdf,.pdf"
                   required
-                  onChange={(e) => setPdfFile(e.target.files[0])}
+                  onChange={handlePdfChange}
                 />
-                <FileHint>Adjunte el informe psicológico en formato PDF (máx. 5MB)</FileHint>
+                <FileHint>Adjunte el informe psicológico en formato PDF (máx. 10 MB)</FileHint>
               </FormSection>
 
               <FormSection>
-                <SectionTitle>Observaciones Adicionales</SectionTitle>
+                <SectionTitle>Observaciones</SectionTitle>
                 <TextArea
                   value={observaciones}
                   onChange={(e) => setObservaciones(e.target.value)}
-                  placeholder="Escriba observaciones adicionales sobre el caso (opcional)..."
+                  placeholder="Observaciones para el trabajador social (opcional)..."
                   rows={4}
+                  maxLength={2000}
                 />
               </FormSection>
 
-              <WarningBox>
-                <strong>Importante:</strong> Al guardar esta evaluación, el caso será enviado automáticamente
-                al Administrador para su revisión y decisión final.
-              </WarningBox>
-
               <ModalActions>
-                <SecondaryButton type="button" onClick={() => setShowEvaluacionModal(false)}>
+                <SecondaryButton type="button" onClick={cerrarFormulario} disabled={saving}>
                   Cancelar
                 </SecondaryButton>
-                <PrimaryButton type="submit" disabled={loading}>
-                  <FaPaperPlane /> {loading ? "Enviando..." : "Guardar y Enviar a Administración"}
+                <PrimaryButton type="submit" disabled={saving || !pdfFile}>
+                  <FaUpload /> {saving ? "Guardando..." : "Guardar informe"}
                 </PrimaryButton>
               </ModalActions>
             </form>
@@ -257,68 +314,74 @@ const Psicologo = () => {
       </Modal>
 
       {/* Modal Detalle */}
-      <Modal show={showDetalleModal}>
+      <Modal $show={showDetalleModal}>
         <ModalContent>
           <ModalHeader>
             <ModalTitle>Detalle del Caso</ModalTitle>
             <CloseButton onClick={() => setShowDetalleModal(false)}>&times;</CloseButton>
           </ModalHeader>
-          {selectedCaso && (
+          {selected && (
             <DetalleContent>
               <DetalleSection>
                 <DetalleSectionTitle>Datos del Niño/a</DetalleSectionTitle>
                 <DetalleGrid>
-                  <DetalleItem><strong>Nombre:</strong> {selectedCaso.nombreCompletoNino}</DetalleItem>
-                  <DetalleItem><strong>Edad:</strong> {selectedCaso.edad} años</DetalleItem>
-                  <DetalleItem><strong>Fecha Nac.:</strong> {new Date(selectedCaso.fechaNacimiento).toLocaleDateString()}</DetalleItem>
-                  <DetalleItem><strong>CI:</strong> {selectedCaso.ciNino || "No registrado"}</DetalleItem>
-                  <DetalleItem style={{gridColumn: "1 / -1"}}><strong>Diagnóstico:</strong> {selectedCaso.diagnostico}</DetalleItem>
+                  <DetalleItem><strong>Nombre:</strong> {selected.pacienteRegistro.nombreCompletoNino}</DetalleItem>
+                  <DetalleItem><strong>Edad:</strong> {selected.pacienteRegistro.edad} años</DetalleItem>
+                  <DetalleItem><strong>Fecha Nac.:</strong> {formatFecha(selected.pacienteRegistro.fechaNacimiento)}</DetalleItem>
+                  <DetalleItem style={{ gridColumn: "1 / -1" }}><strong>Diagnóstico:</strong> {selected.pacienteRegistro.diagnostico}</DetalleItem>
                 </DetalleGrid>
               </DetalleSection>
 
               <DetalleSection>
                 <DetalleSectionTitle>Datos del Tutor</DetalleSectionTitle>
                 <DetalleGrid>
-                  <DetalleItem><strong>Nombre:</strong> {selectedCaso.nombreCompletoTutor}</DetalleItem>
-                  <DetalleItem><strong>CI:</strong> {selectedCaso.ciTutor}</DetalleItem>
-                  <DetalleItem><strong>Parentesco:</strong> {selectedCaso.parentesco}</DetalleItem>
-                  <DetalleItem><strong>Teléfono:</strong> {selectedCaso.telefonoTutor}</DetalleItem>
-                  <DetalleItem><strong>Dirección:</strong> {selectedCaso.direccion}</DetalleItem>
-                  <DetalleItem><strong>Email:</strong> {selectedCaso.emailTutor || "No registrado"}</DetalleItem>
+                  <DetalleItem><strong>Nombre:</strong> {selected.pacienteRegistro.nombreCompletoTutor}</DetalleItem>
+                  <DetalleItem><strong>CI:</strong> {selected.pacienteRegistro.ciTutor}</DetalleItem>
+                  <DetalleItem><strong>Parentesco:</strong> {selected.pacienteRegistro.parentesco}</DetalleItem>
+                  <DetalleItem><strong>Teléfono:</strong> {selected.pacienteRegistro.telefonoTutor}</DetalleItem>
                 </DetalleGrid>
               </DetalleSection>
 
-              {selectedCaso.evaluacionSocial && (
-                <DetalleSection>
-                  <DetalleSectionTitle>Evaluación Social (Resumen)</DetalleSectionTitle>
-                  <DetalleGrid>
-                    <DetalleItem>
-                      <strong>Nivel de Vulnerabilidad:</strong>{" "}
-                      <VulnerabilityBadge nivel={selectedCaso.evaluacionSocial.nivelVulnerabilidad}>
-                        {selectedCaso.evaluacionSocial.nivelVulnerabilidad}
-                      </VulnerabilityBadge>
-                    </DetalleItem>
-                    <DetalleItem><strong>Puntaje:</strong> {selectedCaso.evaluacionSocial.puntajeTotal}/100</DetalleItem>
-                    <DetalleItem><strong>Fecha Evaluación:</strong> {new Date(selectedCaso.evaluacionSocial.fechaEvaluacion).toLocaleDateString()}</DetalleItem>
-                  </DetalleGrid>
-                  <PrivacyNote>
-                    El informe social completo no está disponible para mantener la independencia de su evaluación.
-                  </PrivacyNote>
-                </DetalleSection>
-              )}
+              <DetalleSection>
+                <DetalleSectionTitle>Derivación</DetalleSectionTitle>
+                <DetalleGrid>
+                  <DetalleItem><strong>Derivado por:</strong> {selected.derivadoPor?.nombre}</DetalleItem>
+                  <DetalleItem><strong>Fecha:</strong> {formatFecha(selected.fechaDerivacion)}</DetalleItem>
+                  <DetalleItem style={{ gridColumn: "1 / -1" }}><strong>Motivo:</strong> {selected.motivo}</DetalleItem>
+                  {selected.estado === "COMPLETADA" && (
+                    <>
+                      <DetalleItem><strong>Informe de:</strong> {selected.psicologo?.nombre}</DetalleItem>
+                      <DetalleItem><strong>Entregado:</strong> {formatFecha(selected.fechaInforme)}</DetalleItem>
+                      {selected.observaciones && (
+                        <DetalleItem style={{ gridColumn: "1 / -1" }}><strong>Observaciones:</strong> {selected.observaciones}</DetalleItem>
+                      )}
+                    </>
+                  )}
+                </DetalleGrid>
+              </DetalleSection>
 
               <ModalActions>
                 <SecondaryButton onClick={() => setShowDetalleModal(false)}>
                   Cerrar
                 </SecondaryButton>
-                <PrimaryButton onClick={() => { setShowDetalleModal(false); setShowEvaluacionModal(true); }}>
-                  <FaClipboardCheck /> Realizar Evaluación
-                </PrimaryButton>
+                {selected.estado === "PENDIENTE" ? (
+                  <PrimaryButton onClick={() => abrirFormulario(selected)}>
+                    <FaClipboardCheck /> Subir informe
+                  </PrimaryButton>
+                ) : (
+                  <PrimaryButton onClick={() => abrirInforme(selected, selected.pacienteRegistro.nombreCompletoNino)}>
+                    <FaFilePdf /> Ver informe
+                  </PrimaryButton>
+                )}
               </ModalActions>
             </DetalleContent>
           )}
         </ModalContent>
       </Modal>
+
+      {pdfViewer && (
+        <PdfViewer pdfUrl={pdfViewer.url} title={pdfViewer.title} onClose={cerrarInforme} />
+      )}
     </Container>
   );
 };
@@ -422,11 +485,6 @@ const ContentHeader = styled.div`
   gap: 16px;
 `;
 
-const ContentTitle = styled.h2`
-  font-size: 1.2rem;
-  color: #333;
-  margin: 0;
-`;
 
 const SearchContainer = styled.div`
   display: flex;
@@ -514,31 +572,6 @@ const InfoValue = styled.span`
   flex: 1;
 `;
 
-const VulnerabilityBox = styled.div`
-  background: ${props => {
-    switch(props.nivel) {
-      case 'ALTO': return '#ffebee';
-      case 'MEDIO': return '#fff3e0';
-      case 'BAJO': return '#e8f5e9';
-      default: return '#f5f5f5';
-    }
-  }};
-  color: ${props => {
-    switch(props.nivel) {
-      case 'ALTO': return '#c62828';
-      case 'MEDIO': return '#ef6c00';
-      case 'BAJO': return '#2e7d32';
-      default: return '#666';
-    }
-  }};
-  padding: 10px 16px;
-  border-radius: 8px;
-  margin-top: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-`;
 
 const CasoActions = styled.div`
   display: flex;
@@ -619,7 +652,7 @@ const SuccessMessage = styled.div`
 `;
 
 const Modal = styled.div`
-  display: ${props => props.show ? 'flex' : 'none'};
+  display: ${props => props.$show ? 'flex' : 'none'};
   position: fixed;
   top: 0;
   left: 0;
@@ -690,15 +723,6 @@ const NoteBox = styled.div`
   font-size: 0.9rem;
 `;
 
-const WarningBox = styled.div`
-  background: #fff8e1;
-  padding: 12px 24px;
-  margin: 16px 24px;
-  border-radius: 8px;
-  color: #f57c00;
-  font-size: 0.9rem;
-  border: 1px solid #ffcc02;
-`;
 
 const FormSection = styled.div`
   padding: 0 24px;
@@ -826,31 +850,56 @@ const DetalleItem = styled.div`
   }
 `;
 
-const VulnerabilityBadge = styled.span`
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  ${props => {
-    switch(props.nivel) {
-      case 'ALTO':
-        return 'background: #ffebee; color: #c62828;';
-      case 'MEDIO':
-        return 'background: #fff3e0; color: #ef6c00;';
-      case 'BAJO':
-        return 'background: #e8f5e9; color: #2e7d32;';
-      default:
-        return 'background: #f5f5f5; color: #666;';
-    }
-  }}
+
+
+const Tabs = styled.div`
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 `;
 
-const PrivacyNote = styled.div`
-  background: #f5f5f5;
-  padding: 12px 24px;
-  margin: 12px 24px 0;
+const TabButton = styled.button`
+  padding: 10px 18px;
   border-radius: 8px;
-  color: #888;
+  border: 2px solid ${(p) => (p.$active ? "#ff6347" : "#e0e0e0")};
+  background: ${(p) => (p.$active ? "#ff6347" : "white")};
+  color: ${(p) => (p.$active ? "white" : "#666")};
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #ff6347;
+    color: ${(p) => (p.$active ? "white" : "#ff6347")};
+  }
+`;
+
+const MotivoBox = styled.div`
+  background: #fff3e0;
+  border-left: 4px solid #ff9800;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-top: 12px;
+  font-size: 0.88rem;
+  color: #5d4037;
+  line-height: 1.5;
+  word-break: break-word;
+`;
+
+const LinkButton = styled.button`
+  margin-top: 10px;
+  background: none;
+  border: none;
+  color: #ff6347;
   font-size: 0.85rem;
-  font-style: italic;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
 `;

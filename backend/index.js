@@ -22,6 +22,7 @@ const { cors: corsConfig, helmet: helmetConfig } = require("./config/security");
 
 // Middlewares de seguridad globales
 const { apiLimiter } = require("./middleware/rateLimiter");
+const { authenticateToken } = require("./middleware/auth");
 
 // Controladores existentes (temporalmente hasta refactorizar a MVC puro)
 const Usuario = require("./controllers/usuario");
@@ -29,11 +30,8 @@ const Donaciones = require("./controllers/donaciones");
 const Evento = require("./controllers/evento");
 const Paciente = require("./controllers/paciente");
 const Padre = require("./controllers/padre");
-const blog = require("./controllers/blog");
+const Recuperados = require("./controllers/recuperados");
 const campana = require("./controllers/campana");
-const categoria = require("./controllers/categoria");
-const comentarios = require("./controllers/comentarios");
-const respuesta = require("./controllers/respuesta");
 const usuarioCompana = require("./controllers/usuarioCompana");
 const login = require("./controllers/login");
 const facebook = require("./controllers/facebook");
@@ -80,6 +78,17 @@ app.disable('x-powered-by');
 // ============================================
 // SERVIR ARCHIVOS ESTÁTICOS
 // ============================================
+
+// Fotos de perfil: se muestran en el frontend (otro origen), por eso se permite
+// Cross-Origin-Resource-Policy: cross-origin solo para esta carpeta
+app.use('/uploads/perfiles', express.static(path.join(__dirname, 'uploads', 'perfiles'), {
+  dotfiles: 'deny',
+  index: false,
+  maxAge: '7d',
+  setHeaders: (res) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
+}));
 
 // Servir archivos estáticos con headers de seguridad
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
@@ -154,6 +163,27 @@ app.get("/health", (req, res) => {
 // ✅ Autenticación - MIGRADO
 app.use("/api/auth", authRoutes);
 
+// ✅ Perfil de usuario (foto de perfil) - NUEVO
+const perfilRoutes = require("./routes/perfil.routes");
+app.use("/api/perfil", perfilRoutes);
+
+// ✅ Derivaciones psicológicas (trabajador social -> psicólogo) - NUEVO
+const psicologiaRoutes = require("./routes/psicologia.routes");
+app.use("/api/psicologia", psicologiaRoutes);
+
+// ✅ IA - NUEVO
+const aiRoutes = require("./routes/ai.routes");
+app.use("/api/ai", aiRoutes);
+
+// ✅ WhatsApp Templates - NUEVO
+const whatsappTemplateRoutes = require("./routes/whatsappTemplateRoutes");
+app.use("/api/whatsapp-templates", authenticateToken, whatsappTemplateRoutes);
+
+// ✅ Contacto público - NUEVO
+const contactRoutes = require("./routes/contact.routes");
+app.use("/api/contact", contactRoutes);
+
+
 // Pendientes de migración:
 // app.use("/api/donaciones", donacionesRoutes);
 // app.use("/api/pacientes", pacientesRoutes);
@@ -186,6 +216,7 @@ app.use(Donaciones);
 app.use(Evento);
 app.use(Paciente);
 app.use(Padre);
+app.use(Recuperados);
 app.use(Beneficiarios);
 app.use(psicologo);
 app.use(TrabajoSocial);
@@ -193,12 +224,8 @@ app.use(SolicitudesAyuda);
 app.use(Notificaciones);
 app.use(Reportes);
 
-// Blog y campañas
-app.use(blog);
+// Campañas
 app.use(campana);
-app.use(categoria);
-app.use(comentarios);
-app.use(respuesta);
 app.use(usuarioCompana);
 
 // Mobile

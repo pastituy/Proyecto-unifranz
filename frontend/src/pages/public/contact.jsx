@@ -14,8 +14,6 @@ import {
   FormTextarea,
   SubmitButton
 } from '../../styles/styleContact';
-import emailjs from '@emailjs/browser';
-
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -36,7 +34,7 @@ const Contact = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus({
       submitted: false,
@@ -44,38 +42,40 @@ const Contact = () => {
       info: { error: false, msg: null }
     });
 
-    const templateParams = {
-      to_email: 'cbbe.jhoselindiana.cespedes.br@unifranz.edu.bo',
-      from_name: formData.name,
-      from_email: formData.email,
-      message: formData.message
-    };
-
-    emailjs.send(
-      'service_q1x78zl', 
-      'template_0baqtea', 
-      templateParams, 
-      'Fin4lASZDKDaQWMa9'
-    )
-      .then((response) => {
-        setStatus({
-          submitted: true,
-          submitting: false,
-          info: { error: false, msg: 'Mensaje enviado correctamente!' }
-        });
-        setFormData({
-          name: '',
-          email: '',
-          message: ''
-        });
-      })
-      .catch((err) => {
-        setStatus({
-          submitted: false,
-          submitting: false,
-          info: { error: true, msg: 'Ocurrió un error al enviar el mensaje. Por favor, intenta de nuevo.' }
-        });
+    try {
+      const response = await fetch('http://localhost:3000/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: formData.name,
+          email: formData.email,
+          mensaje: formData.message
+        })
       });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.mensaje || 'Ocurrió un error al enviar el mensaje.');
+      }
+
+      setStatus({
+        submitted: true,
+        submitting: false,
+        info: { error: false, msg: 'Mensaje enviado correctamente!' }
+      });
+      setFormData({
+        name: '',
+        email: '',
+        message: ''
+      });
+    } catch (err) {
+      setStatus({
+        submitted: false,
+        submitting: false,
+        info: { error: true, msg: err.message || 'Ocurrió un error al enviar el mensaje. Por favor, intenta de nuevo.' }
+      });
+    }
   };
 
   return (

@@ -10,7 +10,6 @@ import weekOfYear from 'dayjs/plugin/weekOfYear';
 import ExportButtons from "../../../components/ui/ExportButtons";
 import QRCode from "qrcode";
 
-// Configurar plugins de dayjs
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(weekOfYear);
@@ -23,14 +22,13 @@ const Donaciones = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [item, setItem] = useState({});
+  const [campanas, setCampanas] = useState([]);
 
-  // Estados para filtros de tiempo
-  const [filtroTiempo, setFiltroTiempo] = useState('mes'); // dia, semana, mes, ano, personalizado
+  const [filtroTiempo, setFiltroTiempo] = useState('mes');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
 
-  // Estados para el flujo de pago
-  const [paymentStep, setPaymentStep] = useState('amount'); // amount, qr, processing, success, error
+  const [paymentStep, setPaymentStep] = useState('amount');
   const [qrData, setQrData] = useState(null);
   const [qrImage, setQrImage] = useState('');
   const [transactionId, setTransactionId] = useState('');
@@ -42,7 +40,8 @@ const Donaciones = () => {
     metodoPago: "QR",
     fecha: new Date().toISOString().split('T')[0],
     numeroTransaccion: "",
-    banco: "Banco Simulado"
+    banco: "Banco Simulado",
+    idCampana: ""
   });
 
   const handleInputChange = (e) => {
@@ -62,7 +61,6 @@ const Donaciones = () => {
       setDonaciones(data.data);
       setDonacionesFiltradas(data.data);
 
-      // Calcular total del mes
       const mesActual = new Date().getMonth();
       const total = data.data.reduce((acc, don) => {
         const fecha = new Date(don.fecha);
@@ -77,7 +75,21 @@ const Donaciones = () => {
     }
   };
 
-  // Función para aplicar filtros de tiempo
+  const getCampanas = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/campana");
+      const data = await response.json();
+      if (!response.ok) {
+        toast.error(data.mensaje || "Error al obtener campañas");
+        return;
+      }
+      setCampanas(data.data || []);
+    } catch (error) {
+      console.error("Error al obtener campañas:", error);
+      toast.error("Hubo un problema al obtener las campañas");
+    }
+  };
+
   const aplicarFiltro = () => {
     let donacionesFiltradas = [...donaciones];
     const hoy = dayjs();
@@ -121,7 +133,6 @@ const Donaciones = () => {
         donacionesFiltradas = donaciones;
     }
 
-    // Calcular total de donaciones filtradas
     const total = donacionesFiltradas.reduce((acc, don) =>
       acc + parseFloat(don.cantidad), 0
     );
@@ -132,23 +143,20 @@ const Donaciones = () => {
 
   useEffect(() => {
     getData();
+    getCampanas();
   }, []);
 
-  // Aplicar filtro cuando cambian los valores
   useEffect(() => {
     aplicarFiltro();
   }, [filtroTiempo, fechaInicio, fechaFin, donaciones]);
 
   useEffect(() => {
-    // Escuchar confirmaciones de pago desde el simulador bancario
     const handlePaymentConfirmed = (event) => {
       const confirmation = event.detail;
 
-      // Verificar si esta transacción coincide con la actual
       if (confirmation.transactionId === transactionId && paymentStep === 'qr') {
         console.log('[Donaciones] Pago confirmado desde banco simulador:', confirmation);
 
-        // Cambiar a estado de procesamiento y luego a éxito
         setPaymentStep('processing');
 
         setTimeout(() => {
@@ -158,10 +166,8 @@ const Donaciones = () => {
       }
     };
 
-    // Suscribirse al evento
     window.addEventListener('paymentConfirmed', handlePaymentConfirmed);
 
-    // Limpiar al desmontar
     return () => {
       window.removeEventListener('paymentConfirmed', handlePaymentConfirmed);
     };
@@ -174,7 +180,8 @@ const Donaciones = () => {
       metodoPago: "QR",
       fecha: new Date().toISOString().split('T')[0],
       numeroTransaccion: "",
-      banco: "Banco Nacional de Bolivia"
+      banco: "Banco Nacional de Bolivia",
+      idCampana: ""
     });
     setItem({});
     setPaymentStep('amount');
@@ -185,7 +192,6 @@ const Donaciones = () => {
       clearTimeout(paymentTimer);
       setPaymentTimer(null);
     }
-    // Limpiar el intervalo de verificación de pago
     if (window.paymentCheckInterval) {
       clearInterval(window.paymentCheckInterval);
       window.paymentCheckInterval = null;
@@ -203,40 +209,20 @@ const Donaciones = () => {
     resetForm();
   };
 
+  // ============================================
+  // FUNCIONES DESHABILITADAS PARA TRANSPARENCIA
+  // ============================================
+  // Las donaciones NO pueden ser modificadas ni eliminadas
+  // para mantener la trazabilidad y transparencia de los registros
+
   const editarDonacion = (data) => {
-    setForm({
-      nombreDonante: data.nombreDonante || "",
-      cantidad: data.cantidad || "",
-      metodoPago: data.metodoPago || "QR",
-      fecha: data.fecha ? dayjs(data.fecha).format('YYYY-MM-DD') : new Date().toISOString().split('T')[0],
-      numeroTransaccion: data.numeroTransaccion || "",
-      banco: data.banco || "Banco Simulado"
-    });
-    setItem(data);
-    setIsEditing(true);
-    setShowModal(true);
+    toast.error("⚠️ Las donaciones no pueden ser modificadas por motivos de transparencia y trazabilidad");
   };
 
   const eliminarDonacion = async (id) => {
-    if (!window.confirm("¿Está seguro de eliminar esta donación?")) return;
-
-    try {
-      const response = await fetch(`http://localhost:3000/donaciones/${id}`, {
-        method: "DELETE",
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        toast.error(data.error || "Error al eliminar donación");
-        return;
-      }
-      getData();
-      toast.success("Donación eliminada con éxito");
-    } catch (error) {
-      toast.error("Hubo un problema al eliminar la donación");
-    }
+    toast.error("⚠️ Las donaciones no pueden ser eliminadas por motivos de transparencia y trazabilidad");
   };
 
-  // Generar QR usando la API del BNB
   const generateQR = async () => {
     if (!form.nombreDonante || !form.cantidad) {
       toast.error("Por favor complete nombre y cantidad");
@@ -252,7 +238,6 @@ const Donaciones = () => {
     try {
       toast.loading("Generando código QR con el BNB...");
 
-      // Llamar al backend para generar QR con el BNB
       const response = await fetch('http://localhost:3000/api/bnb/generate-qr', {
         method: 'POST',
         headers: {
@@ -272,10 +257,8 @@ const Donaciones = () => {
         throw new Error(result.message || 'Error al generar código QR');
       }
 
-      // El BNB devuelve la imagen en base64
       const qrImageUrl = `data:image/png;base64,${result.data.qrImage}`;
 
-      // Datos del QR para mostrar en la interfaz
       const qrPayload = {
         transactionId: result.data.transactionId,
         qrId: result.data.qrId,
@@ -293,13 +276,11 @@ const Donaciones = () => {
       setQrImage(qrImageUrl);
       setTransactionId(result.data.transactionId);
 
-      // Guardar qrId del BNB para verificar el estado después
       window.bnbQrId = result.data.qrId;
 
       setPaymentStep('qr');
       toast.success("Código QR generado exitosamente");
 
-      // Iniciar verificación periódica del estado del pago
       startPaymentStatusCheck(result.data.qrId);
     } catch (error) {
       toast.dismiss();
@@ -386,7 +367,8 @@ const Donaciones = () => {
       ...form,
       numeroTransaccion: transactionId,
       banco: qrData.bank,
-      metodoPago: "QR"
+      metodoPago: "QR",
+      idCampana: form.idCampana ? parseInt(form.idCampana) : null
     };
 
     try {
@@ -540,8 +522,9 @@ const Donaciones = () => {
       <Table
         columns={columns}
         data={donacionesFiltradas}
-        onEdit={editarDonacion}
-        onDelete={eliminarDonacion}
+        onEdit={null}
+        onDelete={null}
+        readOnly={true}
       />
 
       {showModal && (
@@ -596,6 +579,25 @@ const Donaciones = () => {
                     />
                   </FormGroup>
 
+                  <FormGroup>
+                    <Label>Campaña (Opcional)</Label>
+                    <Select
+                      name="idCampana"
+                      value={form.idCampana}
+                      onChange={handleInputChange}
+                    >
+                      <option value="">Sin campaña específica</option>
+                      {campanas.map((campana) => (
+                        <option key={campana.id} value={campana.id}>
+                          {campana.titulo}
+                        </option>
+                      ))}
+                    </Select>
+                    <InfoText>
+                      Selecciona una campaña si esta donación es para una causa específica
+                    </InfoText>
+                  </FormGroup>
+
                   <InfoBox style={{ background: '#e8f5e9', borderLeftColor: '#4caf50' }}>
                     <strong>🔒 Pasarela de Pago Segura</strong><br />
                     Se generará un código QR único para esta transacción.
@@ -641,24 +643,11 @@ const Donaciones = () => {
                   </PaymentDetails>
 
                   <InfoBox style={{ background: '#fff3e0', borderLeftColor: '#ff9800' }}>
-                    <strong>📱 Instrucciones para pago real:</strong><br />
-                    1. Abre tu app bancaria<br />
+                    <strong>📱 Pasos para completar tu donación:</strong><br />
+                    1. Abre tu aplicación bancaria<br />
                     2. Escanea este código QR<br />
-                    3. Confirma el pago en tu app<br />
-                    4. Espera la confirmación<br />
-                    <br />
-                    <strong>🧪 O prueba con el simulador:</strong><br />
-                    <a
-                      href="/banco-simulador"
-                      target="_blank"
-                      style={{
-                        color: '#ff9800',
-                        fontWeight: 'bold',
-                        textDecoration: 'underline'
-                      }}
-                    >
-                      Abrir Simulador de Banco →
-                    </a>
+                    3. Confirma el pago en tu banco<br />
+                    4. Espera la confirmación automática
                   </InfoBox>
 
                   <SimulationBox>
@@ -760,95 +749,13 @@ const Donaciones = () => {
                 </ErrorContainer>
               )}
 
-              {/* Formulario de edición (modo tradicional) */}
-              {isEditing && (
-                <Form onSubmit={async (e) => {
-                  e.preventDefault();
-                  try {
-                    const response = await fetch(`http://localhost:3000/donaciones/${item.id}`, {
-                      method: "PUT",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(form),
-                    });
-                    const result = await response.json();
-                    if (!response.ok) {
-                      toast.error(result.error || "Error al actualizar donación");
-                      return;
-                    }
-                    getData();
-                    closeModal();
-                    toast.success("Donación actualizada con éxito");
-                  } catch (error) {
-                    toast.error("Hubo un problema al actualizar la donación");
-                  }
-                }}>
-                  <FormGroup>
-                    <Label>Nombre del Donante</Label>
-                    <Input
-                      type="text"
-                      name="nombreDonante"
-                      value={form.nombreDonante}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </FormGroup>
-
-                  <FormGroup>
-                    <Label>Cantidad (Bs)</Label>
-                    <Input
-                      type="number"
-                      name="cantidad"
-                      value={form.cantidad}
-                      onChange={handleInputChange}
-                      step="0.01"
-                      min="0"
-                      required
-                    />
-                  </FormGroup>
-
-                  <FormGroup>
-                    <Label>Banco</Label>
-                    <Input
-                      type="text"
-                      name="banco"
-                      value={form.banco}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </FormGroup>
-
-                  <FormGroup>
-                    <Label>Número de Transacción</Label>
-                    <Input
-                      type="text"
-                      name="numeroTransaccion"
-                      value={form.numeroTransaccion}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </FormGroup>
-
-                  <FormGroup>
-                    <Label>Fecha</Label>
-                    <Input
-                      type="date"
-                      name="fecha"
-                      value={form.fecha}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </FormGroup>
-
-                  <ButtonGroup>
-                    <CancelButton type="button" onClick={closeModal}>
-                      Cancelar
-                    </CancelButton>
-                    <SubmitButton type="submit">
-                      Actualizar
-                    </SubmitButton>
-                  </ButtonGroup>
-                </Form>
-              )}
+              {/* ============================================
+                  FORMULARIO DE EDICIÓN DESHABILITADO
+                  ============================================
+                  Por motivos de transparencia y trazabilidad,
+                  las donaciones no pueden ser modificadas una
+                  vez registradas en el sistema.
+              */}
             </ModalContent>
           </Modal>
         </ModalOverlay>
@@ -862,6 +769,14 @@ export default Donaciones;
 // Styled Components
 const Container = styled.div`
   padding: 20px;
+
+  @media (max-width: 768px) {
+    padding: 15px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 10px;
+  }
 `;
 
 const TotalBox = styled.div`
@@ -870,6 +785,8 @@ const TotalBox = styled.div`
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   color: white;
+  flex: 1;
+  min-width: 250px;
 
   h3 {
     margin: 0 0 0.5rem 0;
@@ -877,18 +794,45 @@ const TotalBox = styled.div`
     font-weight: 500;
     opacity: 0.9;
   }
+
+  @media (max-width: 768px) {
+    padding: 1rem 1.5rem;
+    min-width: 100%;
+
+    h3 {
+      font-size: 0.8rem;
+    }
+  }
 `;
 
 const Total = styled.div`
   font-size: 2rem;
   font-weight: bold;
   color: white;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.3rem;
+  }
 `;
 
 const Actions = styled.div`
   display: flex;
   gap: 1rem;
   align-items: center;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: stretch;
+
+    button {
+      flex: 1;
+    }
+  }
 `;
 
 const TopSection = styled.div`
@@ -898,6 +842,11 @@ const TopSection = styled.div`
   margin-bottom: 20px;
   flex-wrap: wrap;
   gap: 1rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
 `;
 
 const LoginButton = styled.button`
@@ -940,6 +889,21 @@ const Modal = styled.div`
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+
+  @media (max-width: 768px) {
+    width: 95%;
+    max-width: 500px;
+    max-height: 95vh;
+    border-radius: 8px;
+  }
+
+  @media (max-width: 480px) {
+    width: 100%;
+    max-width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
 `;
 
 const ModalHeader = styled.div`
@@ -957,6 +921,23 @@ const ModalHeader = styled.div`
     font-size: 20px;
     font-weight: 600;
   }
+
+  @media (max-width: 768px) {
+    padding: 16px 20px;
+
+    h2 {
+      font-size: 18px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 14px 16px;
+    border-radius: 0;
+
+    h2 {
+      font-size: 16px;
+    }
+  }
 `;
 
 const CloseButton = styled.button`
@@ -971,14 +952,32 @@ const CloseButton = styled.button`
   align-items: center;
   justify-content: center;
   transition: background 0.3s ease;
+  flex-shrink: 0;
 
   &:hover {
     background: rgba(255, 255, 255, 0.3);
+  }
+
+  @media (max-width: 480px) {
+    width: 28px;
+    height: 28px;
+
+    svg {
+      font-size: 20px;
+    }
   }
 `;
 
 const ModalContent = styled.div`
   padding: 24px;
+
+  @media (max-width: 768px) {
+    padding: 20px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 16px;
+  }
 `;
 
 const Form = styled.form`
@@ -1010,6 +1009,29 @@ const Input = styled.input`
     outline: none;
     border-color: #667eea;
   }
+`;
+
+const Select = styled.select`
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.3s ease;
+  background-color: white;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+`;
+
+const InfoText = styled.p`
+  font-size: 12px;
+  color: #666;
+  margin-top: 6px;
+  font-style: italic;
 `;
 
 const InfoBox = styled.div`
@@ -1077,18 +1099,32 @@ const QRBox = styled.div`
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
+
+  @media (max-width: 480px) {
+    padding: 15px;
+  }
 `;
 
 const QRImage = styled.img`
   width: 280px;
   height: 280px;
   display: block;
+
+  @media (max-width: 768px) {
+    width: 240px;
+    height: 240px;
+  }
+
+  @media (max-width: 480px) {
+    width: 200px;
+    height: 200px;
+  }
 `;
 
 const DownloadQRButton = styled.button`
   width: 100%;
   padding: 12px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: ${(props) => props.theme?.colors?.primary || "#FF6347"};
   color: white;
   border: none;
   border-radius: 8px;
@@ -1105,7 +1141,7 @@ const DownloadQRButton = styled.button`
   &:hover {
     opacity: 0.9;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(255, 99, 71, 0.4);
   }
 
   &:active {
@@ -1335,6 +1371,15 @@ const FilterPanel = styled.div`
   padding: 24px;
   margin-bottom: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  @media (max-width: 768px) {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 12px;
+  }
 `;
 
 const FilterTitle = styled.h3`
@@ -1345,18 +1390,35 @@ const FilterTitle = styled.h3`
   display: flex;
   align-items: center;
   gap: 8px;
+
+  @media (max-width: 768px) {
+    font-size: 16px;
+    margin-bottom: 15px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 14px;
+  }
 `;
 
 const FilterContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
+
+  @media (max-width: 768px) {
+    gap: 15px;
+  }
 `;
 
 const FilterButtonGroup = styled.div`
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    gap: 8px;
+  }
 `;
 
 const FilterButton = styled.button`
@@ -1380,6 +1442,18 @@ const FilterButton = styled.button`
   &:active {
     transform: translateY(0);
   }
+
+  @media (max-width: 768px) {
+    padding: 8px 16px;
+    font-size: 12px;
+    flex: 1 1 calc(50% - 4px);
+    min-width: 100px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
 `;
 
 const DateRangeContainer = styled.div`
@@ -1390,12 +1464,19 @@ const DateRangeContainer = styled.div`
   background: #f8f9fa;
   border-radius: 8px;
   border: 1px solid #e0e0e0;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
 `;
 
 const DateInput = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1;
 
   label {
     font-size: 13px;
@@ -1417,6 +1498,16 @@ const DateInput = styled.div`
       box-shadow: 0 0 0 3px rgba(255, 99, 71, 0.1);
     }
   }
+
+  @media (max-width: 768px) {
+    width: 100%;
+
+    input[type="date"] {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+  }
 `;
 
 const FilterStats = styled.div`
@@ -1426,6 +1517,7 @@ const FilterStats = styled.div`
   background: linear-gradient(135deg, #fef7f5 0%, #fff9f7 100%);
   border-radius: 8px;
   border-left: 4px solid #ff6347;
+  flex-wrap: wrap;
 
   span {
     font-size: 14px;
@@ -1434,6 +1526,24 @@ const FilterStats = styled.div`
     strong {
       color: #ff6347;
       font-weight: 600;
+    }
+  }
+
+  @media (max-width: 768px) {
+    gap: 12px;
+    padding: 12px;
+    flex-direction: column;
+
+    span {
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 10px;
+
+    span {
+      font-size: 12px;
     }
   }
 `;

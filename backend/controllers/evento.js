@@ -12,9 +12,10 @@ app.get("/evento", async (req, res) => {
       mensaje: "eventos obtenidos correctamente",
     });
   } catch (error) {
+    console.error("Error al obtener eventos:", error);
     res.status(500).json({
       mensaje: "Error al traer evento",
-      error: error.mensaje,
+      error: error.message,
     });
   }
 });
@@ -31,16 +32,25 @@ app.get("/evento/:id", async (req, res) => {
       mensaje: "evento obtenido correctamente",
     });
   } catch (error) {
+    console.error("Error al obtener evento:", error);
     res.status(500).json({
       mensaje: "Error al traer evento",
-      error: error.mensaje,
+      error: error.message,
     });
   }
 });
 app.post("/evento", async (req, res) => {
   try {
+    const { titulo, descripcion, fecha, ubicacion, img } = req.body;
+
     const eventoCreado = await prisma.evento.create({
-      data: req.body,
+      data: {
+        titulo,
+        descripcion,
+        fecha,
+        ubicacion,
+        img: img || "default-event.jpg", // Valor por defecto si no se proporciona imagen
+      },
     });
 
     res.json({
@@ -48,9 +58,10 @@ app.post("/evento", async (req, res) => {
       data: eventoCreado,
     });
   } catch (error) {
+    console.error("Error al crear evento:", error);
     res.status(500).json({
       mensaje: "Error al crear evento",
-      error: error.mensaje,
+      error: error.message,
     });
   }
 });
@@ -67,9 +78,10 @@ app.put("/evento/:id", async (req, res) => {
       data: evento,
     });
   } catch (error) {
+    console.error("Error al editar evento:", error);
     res.status(500).json({
       mensaje: "Error al editar evento",
-      error: error.mensaje,
+      error: error.message,
     });
   }
 });
@@ -84,9 +96,10 @@ app.delete("/evento/:id", async (req, res) => {
       mensaje: "evento eliminado correctamente",
     });
   } catch (error) {
+    console.error("Error al eliminar evento:", error);
     res.status(500).json({
       mensaje: "Error al eliminar evento",
-      error: error.mensaje,
+      error: error.message,
     });
   }
 });

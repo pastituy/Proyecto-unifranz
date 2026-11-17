@@ -285,7 +285,6 @@ app.post("/mobile-beneficiario-login", async (req, res) => {
         pacienteRegistro: {
           include: {
             evaluacionSocial: true,
-            evaluacionPsicologica: true,
           },
         },
       },

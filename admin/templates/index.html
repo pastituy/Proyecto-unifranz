@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OncoFeliz - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #818cf8, #34d399);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .terminal {
+            background: #000;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+            height: 300px;
+            overflow-y: auto;
+            color: #adbac7;
+            border: 1px solid #30363d;
+        }
+
+        .log-container {
+            margin-top: 2rem;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-online {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 1.2rem;
+            height: 1.2rem;
+            border: 3px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .service-list {
+            list-style: none;
+        }
+
+        .service-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .service-name {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Guide Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            max-width: 700px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content h3 {
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .modal-content p,
+        .modal-content li {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem;">
+            <div style="flex: 1; text-align: center;">
+                <h1>OncoFeliz Admin</h1>
+                <p class="subtitle">System Control & Monitoring Interface</p>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <button class="btn"
+                    style="width: auto; background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid rgba(255,255,255,0.1);"
+                    onclick="toggleGuide(true)">📖 Guía de Uso</button>
+                <a href="/logout"
+                    style="color: var(--text-muted); text-decoration: none; font-size: 0.875rem; border: 1px solid rgba(255,255,255,0.1); padding: 0.5rem 1rem; border-radius: 0.5rem; transition: background 0.2s;">Logout</a>
+            </div>
+        </header>
+
+        <div class="grid">
+            <!-- Source Control -->
+            <div class="card">
+                <h2>📦 Updates</h2>
+                <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem;">Force pull latest
+                    changes from repository.</p>
+                <button class="btn btn-primary" onclick="runAction('/api/git-pull', this)">
+                    <span class="loading-spinner"></span>
+                    Git Force Pull
+                </button>
+            </div>
+
+            <!-- Database -->
+            <div class="card">
+                <h2>🗄️ Database</h2>
+                <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem;">Create a fresh backup
+                    of 'onco' database.</p>
+                <button class="btn btn-success" onclick="runAction('/api/db-backup', this)">
+                    <span class="loading-spinner"></span>
+                    DB Backup (PostgreSQL)
+                </button>
+            </div>
+
+            <!-- Services -->
+            <div class="card">
+                <h2>⚙️ Services</h2>
+                <ul class="service-list" style="margin-bottom: 1.5rem;">
+                    <li class="service-item">
+                        <span class="service-name">oncofeliz-backend</span>
+                        <span class="status-pill status-online">Active</span>
+                    </li>
+                    <li class="service-item">
+                        <span class="service-name">oncofeliz-frontend</span>
+                        <span class="status-pill status-online">Active</span>
+                    </li>
+                    <li class="service-item">
+                        <span class="service-name">oncofeliz-admin</span>
+                        <span class="status-pill status-online"
+                            style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">Admin</span>
+                    </li>
+                    <li class="service-item">
+                        <span class="service-name">postgresql@18-main</span>
+                        <span class="status-pill status-online">Active</span>
+                    </li>
+                </ul>
+                <button class="btn btn-danger" onclick="runAction('/api/restart-services', this)">
+                    <span class="loading-spinner"></span>
+                    Restart All Services
+                </button>
+            </div>
+            <!-- Repository History -->
+            <div class="card">
+                <h2>📜 Git History</h2>
+                <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem;">View the last 20
+                    commits in the repository.</p>
+                <button class="btn btn-primary" onclick="loadGitLog(this)">
+                    <span class="loading-spinner"></span>
+                    Show Commit History
+                </button>
+            </div>
+        </div>
+
+        <!-- Git Log Viewer (Initially hidden) -->
+        <div id="git-log-section" class="card"
+            style="display: none; margin-bottom: 2rem; border-color: var(--primary);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2>🌳 Latest Commits</h2>
+                <button class="btn btn-warning" style="width: auto;"
+                    onclick="document.getElementById('git-log-section').style.display='none'">Close</button>
+            </div>
+            <div id="git-log-content" class="terminal"
+                style="height: auto; max-height: 400px; font-size: 0.8rem; line-height: 1.6;">
+                Loading history...
+            </div>
+        </div>
+
+        <div class="log-container card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2>📜 System Logs</h2>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-primary" style="width: auto;"
+                        onclick="startLogs('oncofeliz-backend')">Backend Logs</button>
+                    <button class="btn btn-primary" style="width: auto;"
+                        onclick="startLogs('oncofeliz-frontend')">Frontend Logs</button>
+                    <button class="btn btn-primary" style="width: auto; background: #4f46e5;"
+                        onclick="startLogs('oncofeliz-admin')">Admin Logs</button>
+                    <button class="btn btn-warning" style="width: auto;" onclick="clearLogs()">Clear</button>
+                </div>
+            </div>
+            <div id="log-terminal" class="terminal">
+                Waiting for logs... Click a button above to start monitoring.
+            </div>
+        </div>
+    </div>
+
+    <!-- Guía de Uso Modal -->
+    <div id="guide-modal" class="modal-overlay" onclick="if(event.target == this) toggleGuide(false)">
+        <div class="modal-content">
+            <button class="close-modal" onclick="toggleGuide(false)">&times;</button>
+            <h2 style="color: var(--text-main); margin-bottom: 1.5rem;">📖 Guía de Uso - Panel de Administración</h2>
+
+            <h3>📦 Actualizaciones (Git Force Pull)</h3>
+            <p>Este botón realiza un "hard reset" del repositorio. Descarga los últimos cambios de GitHub y sobrescribe
+                cualquier cambio local. Úsalo para desplegar nuevas versiones de código.</p>
+
+            <h3>🗄️ Base de Datos (Backup)</h3>
+            <p>Genera un volcado completo de la base de datos "oncologico". El proceso crea un archivo .sql, lo comprime
+                en .tar.gz y te ofrece un enlace de descarga directa una vez finalizado.</p>
+
+            <h3>⚙️ Servicios (Reiniciar)</h3>
+            <p>Reinicia los servicios del sistema en orden: Backend, Frontend, este Panel de Administración y
+                PostgreSQL. Es útil después de una actualización o si el sistema presenta lentitud.</p>
+
+            <h3>🌳 Historial de Git</h3>
+            <p>Muestra los últimos 20 commits (cambios) realizados en el repositorio. Permite verificar quién hizo el
+                último cambio y qué funcionalidad se añadió.</p>
+
+            <h3>📜 Logs del Sistema</h3>
+            <p>Permite ver en tiempo real lo que está sucediendo internamente:</p>
+            <ul>
+                <li><strong>Backend:</strong> Errores de API, conexiones a la DB, correos enviados.</li>
+                <li><strong>Frontend:</strong> Estado del servidor de archivos estáticos.</li>
+                <li><strong>Admin:</strong> Seguimiento de backups y procesos de Git.</li>
+            </ul>
+
+            <button class="btn btn-primary" style="margin-top: 2rem;" onclick="toggleGuide(false)">Entendido</button>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const terminal = document.getElementById('log-terminal');
+
+        function toggleGuide(show) {
+            document.getElementById('guide-modal').style.display = show ? 'flex' : 'none';
+        }
+
+        socket.on('log_data', function (msg) {
+            const div = document.createElement('div');
+            div.textContent = `[${msg.service}] ${msg.data}`;
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+
+            // Keep only last 500 lines
+            if (terminal.childNodes.length > 500) {
+                terminal.removeChild(terminal.firstChild);
+            }
+        });
+
+        function clearLogs() {
+            terminal.innerHTML = 'Logs cleared. Waiting for data...';
+        }
+
+        function startLogs(service) {
+            clearLogs();
+            socket.emit('start_logs', { service: service });
+        }
+
+        async function loadGitLog(btn) {
+            const spinner = btn.querySelector('.loading-spinner');
+            const section = document.getElementById('git-log-section');
+            const content = document.getElementById('git-log-content');
+
+            spinner.style.display = 'inline-block';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/git-log');
+                const data = await response.json();
+
+                section.style.display = 'block';
+                if (data.success) {
+                    const lines = data.stdout.trim().split('\n');
+                    content.innerHTML = lines.map(line => {
+                        const [hash, date, author, msg] = line.split(' | ');
+                        return `<div><span style="color: #818cf8; font-weight: bold;">${hash}</span> <span style="color: var(--text-muted)">[${date}]</span> <span style="color: var(--success)">${author}</span>: ${msg}</div>`;
+                    }).join('');
+
+                    // Smooth scroll to history
+                    section.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    content.innerText = 'Error loading log: ' + data.stderr;
+                }
+            } catch (error) {
+                alert('Request failed: ' + error);
+            } finally {
+                spinner.style.display = 'none';
+                btn.disabled = false;
+            }
+        }
+
+        async function runAction(url, btn) {
+            const spinner = btn.querySelector('.loading-spinner');
+            spinner.style.display = 'inline-block';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(url, { method: 'POST' });
+                const data = await response.json();
+
+                const logEntry = document.createElement('div');
+                logEntry.style.color = data.success ? '#10b981' : '#ef4444';
+
+                let message = `<strong>[ACTION]</strong> ${url.split('/').pop()} - ${data.success ? 'SUCCESS' : 'FAILED'}<br>${data.stdout || ''}${data.stderr || ''}`;
+
+                if (data.download_url) {
+                    message += `<br><a href="${data.download_url}" class="btn btn-success" style="width: auto; margin-top: 10px; display: inline-flex;">⬇️ Download Backup (.tar.gz)</a>`;
+                }
+
+                logEntry.innerHTML = message;
+                terminal.prepend(logEntry);
+
+                if (data.details) {
+                    console.table(data.details);
+                }
+            } catch (error) {
+                alert('Action failed: ' + error);
+            } finally {
+                spinner.style.display = 'none';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>

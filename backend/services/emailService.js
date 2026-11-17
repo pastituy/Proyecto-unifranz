@@ -375,7 +375,78 @@ async function enviarAgradecimientoDonacion(email, nombreDonante, monto) {
   }
 }
 
+/**
+ * Envía un mensaje del formulario de contacto público a la fundación
+ * @param {string} nombre - Nombre de quien contacta
+ * @param {string} email - Email de quien contacta (para responderle)
+ * @param {string} mensaje - Contenido del mensaje
+ * @returns {Promise<boolean>} - True si el email se envió correctamente
+ */
+async function enviarMensajeContacto(nombre, email, mensaje) {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER || 'Fundación OncoFeliz <noreply@oncofeliz.org>',
+      to: process.env.CONTACT_EMAIL || process.env.EMAIL_USER,
+      replyTo: email,
+      subject: `📩 Nuevo mensaje de contacto de ${nombre}`,
+      html: `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { font-family: 'Arial', sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 40px auto; background-color: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden; }
+            .header { background: linear-gradient(135deg, #FF6347 0%, #FF8C00 100%); padding: 30px 20px; text-align: center; color: white; }
+            .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+            .content { padding: 30px; }
+            .field { margin-bottom: 20px; }
+            .field-label { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #999; margin-bottom: 4px; }
+            .field-value { font-size: 16px; color: #333; }
+            .message-box { background-color: #f8f9fa; border-left: 4px solid #FF6347; padding: 15px; border-radius: 6px; white-space: pre-wrap; }
+            .footer { background-color: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>📩 Nuevo Mensaje de Contacto</h1>
+            </div>
+            <div class="content">
+              <div class="field">
+                <div class="field-label">Nombre</div>
+                <div class="field-value">${nombre}</div>
+              </div>
+              <div class="field">
+                <div class="field-label">Email</div>
+                <div class="field-value">${email}</div>
+              </div>
+              <div class="field">
+                <div class="field-label">Mensaje</div>
+                <div class="message-box">${mensaje}</div>
+              </div>
+            </div>
+            <div class="footer">
+              <p>Este mensaje fue enviado desde el formulario de contacto del sitio web.</p>
+              <p>&copy; ${new Date().getFullYear()} Fundación OncoFeliz. Todos los derechos reservados.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Mensaje de contacto enviado:', info.messageId);
+    return true;
+  } catch (error) {
+    console.error('Error al enviar mensaje de contacto:', error);
+    return false;
+  }
+}
+
 module.exports = {
   enviarCodigoVerificacion,
-  enviarAgradecimientoDonacion
+  enviarAgradecimientoDonacion,
+  enviarMensajeContacto
 };

@@ -127,22 +127,30 @@ const ChatWidget = () => {
     if (!input.trim()) return;
 
     const userMessage = { text: input, fromUser: true };
+    const conversationHistory = messages.map(msg => ({
+      role: msg.fromUser ? 'user' : 'assistant',
+      content: msg.text
+    }));
     setMessages(prev => [...prev, userMessage]);
     setInput('');
 
     try {
-      const response = await fetch('http://localhost:5005/webhooks/rest/webhook', {
+      const response = await fetch('http://localhost:3000/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sender: 'usuario',
-          message: input
+          question: input,
+          conversationHistory
         })
       });
 
       const data = await response.json();
-      const botResponses = data.map(msg => ({ text: msg.text, fromUser: false }));
-      setMessages(prev => [...prev, ...botResponses]);
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.mensaje || 'Error al conectar con el servidor.');
+      }
+
+      setMessages(prev => [...prev, { text: data.data.content, fromUser: false }]);
     } catch (error) {
       setMessages(prev => [...prev, { text: 'Error al conectar con el servidor.', fromUser: false }]);
     }

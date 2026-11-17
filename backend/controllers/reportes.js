@@ -79,6 +79,21 @@ const obtenerHistorialAyudas = async (req, res) => {
       beneficiarioFilters.asignadoAId = parseInt(trabajadorSocialId);
     }
 
+    // ⚡ Bolt: Optimización de rendimiento
+    // Mover el filtro de edad a la consulta de la base de datos para reducir la transferencia de datos
+    // y el uso de memoria. Anteriormente, esto se filtraba en memoria después de obtener *todos* los registros.
+    if (edadMin || edadMax) {
+      beneficiarioFilters.pacienteRegistro = {
+        edad: {}
+      };
+      if (edadMin) {
+        beneficiarioFilters.pacienteRegistro.edad.gte = parseInt(edadMin, 10);
+      }
+      if (edadMax) {
+        beneficiarioFilters.pacienteRegistro.edad.lte = parseInt(edadMax, 10);
+      }
+    }
+
     // Solo agregar filtros de beneficiario si existen
     if (Object.keys(beneficiarioFilters).length > 0) {
       where.beneficiario = beneficiarioFilters;
@@ -122,19 +137,10 @@ const obtenerHistorialAyudas = async (req, res) => {
       }
     });
 
-    // Aplicar filtro de edad si es necesario (no se puede hacer directamente en Prisma)
-    let solicitudesFiltradas = solicitudes;
-    if (edadMin || edadMax) {
-      solicitudesFiltradas = solicitudes.filter(s => {
-        const edad = s.beneficiario.pacienteRegistro.edad;
-        if (edadMin && edad < parseInt(edadMin)) return false;
-        if (edadMax && edad > parseInt(edadMax)) return false;
-        return true;
-      });
-    }
+    // El filtro de edad ahora se aplica directamente en la consulta de Prisma.
 
     // Formatear datos para el frontend
-    const historial = solicitudesFiltradas.map(s => ({
+    const historial = solicitudes.map(s => ({
       id: s.id,
       codigoSolicitud: s.codigoSolicitud,
       // Datos del beneficiario

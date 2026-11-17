@@ -96,7 +96,6 @@ async function main() {
   await prisma.sesionQuimioterapia.deleteMany({});
   await prisma.ayuda.deleteMany({});
   await prisma.beneficiario.deleteMany({});
-  await prisma.evaluacionPsicologica.deleteMany({});
   await prisma.evaluacionSocial.deleteMany({});
   await prisma.pacienteRegistro.deleteMany({});
   await prisma.donaciones.deleteMany({});
@@ -261,16 +260,6 @@ async function main() {
       }
     });
 
-    // Crear evaluación psicológica
-    await prisma.evaluacionPsicologica.create({
-      data: {
-        pacienteRegistroId: paciente.id,
-        observaciones: `Paciente en proceso de adaptación al diagnóstico. ${edad < 8 ? 'Requiere apoyo familiar constante.' : 'Muestra comprensión parcial de su situación.'}`,
-        psicologoId: psicologo.id,
-        fechaEvaluacion: fechaAleatoria(7)
-      }
-    });
-
     // Crear beneficiario
     const codigoBeneficiario = `B${String(i + 1).padStart(3, '0')}`;
     const beneficiario = await prisma.beneficiario.create({
@@ -353,7 +342,6 @@ async function main() {
   const totalSolicitudes = await prisma.solicitudAyuda.count();
   const totalDonaciones = await prisma.donaciones.count();
   const totalEvaluacionesSociales = await prisma.evaluacionSocial.count();
-  const totalEvaluacionesPsicologicas = await prisma.evaluacionPsicologica.count();
 
   console.log(`👥 Usuarios: ${totalUsuarios}`);
   console.log(`   - 1 ADMINISTRADOR`);
@@ -362,7 +350,6 @@ async function main() {
   console.log(`   - 1 ASISTENTE`);
   console.log(`👶 Pacientes registrados: ${totalPacientes}`);
   console.log(`📋 Evaluaciones sociales: ${totalEvaluacionesSociales}`);
-  console.log(`🧠 Evaluaciones psicológicas: ${totalEvaluacionesPsicologicas}`);
   console.log(`✅ Beneficiarios activos: ${totalBeneficiarios}`);
   console.log(`📄 Solicitudes de ayuda: ${totalSolicitudes}`);
   console.log(`💰 Donaciones: ${totalDonaciones}`);

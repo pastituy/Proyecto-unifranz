@@ -9,10 +9,10 @@ module.exports = {
     // Secret debe ser una cadena aleatoria de 256+ bits
     // En producción: usar variable de entorno
     secret: process.env.JWT_SECRET || 'CHANGE_THIS_IN_PRODUCTION_MIN_32_CHARS_RANDOM',
-    accessTokenExpiry: '15m',      // 15 minutos
-    refreshTokenExpiry: '7d',       // 7 días
-    issuer: 'OncoFeliz-API',
-    audience: 'OncoFeliz-App'
+    accessTokenExpiry: process.env.JWT_ACCESS_EXPIRY || '15m',
+    refreshTokenExpiry: process.env.JWT_REFRESH_EXPIRY || '7d',
+    issuer: process.env.JWT_ISSUER || 'OncoFeliz-API',
+    audience: process.env.JWT_AUDIENCE || 'OncoFeliz-App'
   },
 
   // Password Policy
@@ -47,7 +47,7 @@ module.exports = {
     // General API
     api: {
       windowMs: 15 * 60 * 1000,  // 15 minutos
-      max: 100,                   // 100 requests
+      max: 200,                   // 100 requests
       message: 'Demasiadas solicitudes. Intente nuevamente más tarde.'
     },
     // File uploads
@@ -121,24 +121,40 @@ module.exports = {
   },
 
   // Roles y Permisos
+  // IMPORTANTE: estos valores deben coincidir exactamente con el enum `Rol` de prisma/schema.prisma
   roles: {
-    ADMIN: 'admin',
-    PSICOLOGO: 'psicologo',
-    TRABAJADOR_SOCIAL: 'trabajador_social',
-    BENEFICIARIO: 'beneficiario',
-    USUARIO: 'usuario'
+    SUPER_ADMIN: 'SUPER_ADMIN',
+    ADMIN: 'ADMINISTRADOR',
+    PSICOLOGO: 'PSICOLOGO',
+    TRABAJADOR_SOCIAL: 'TRABAJADOR_SOCIAL',
+    ASISTENTE: 'ASISTENTE',
+    BENEFICIARIO: 'BENEFICIARIO'
   },
 
   // Definición de permisos por rol
   permissions: {
-    admin: ['*'], // Todos los permisos
-    psicologo: [
+    SUPER_ADMIN: ['*'], // Todos los permisos, sin restricciones
+    ADMINISTRADOR: [
+      'caso:read',
+      'caso:write',
+      'usuario:read',
+      'usuario:write',
+      'evento:read',
+      'evento:write',
+      'campana:read',
+      'campana:write',
+      'donacion:read',
+      'redes_sociales:write',
+      'whatsapp_template:read',
+      'whatsapp_template:write'
+    ],
+    PSICOLOGO: [
       'paciente:read',
       'paciente:write',
       'evaluacion_psicologica:read',
       'evaluacion_psicologica:write'
     ],
-    trabajador_social: [
+    TRABAJADOR_SOCIAL: [
       'paciente:read',
       'paciente:write',
       'evaluacion_social:read',
@@ -146,15 +162,15 @@ module.exports = {
       'ayuda:read',
       'ayuda:write'
     ],
-    beneficiario: [
+    ASISTENTE: [
+      'solicitud:read',
+      'solicitud:write',
+      'reporte:read'
+    ],
+    BENEFICIARIO: [
       'paciente:read_own',
       'solicitud:read_own',
       'solicitud:write'
-    ],
-    usuario: [
-      'donacion:write',
-      'evento:read',
-      'blog:read'
     ]
   },
 
@@ -169,8 +185,8 @@ module.exports = {
 
   // 2FA Configuration
   twoFactor: {
-    codeLength: 6,
-    expiryMinutes: 10,
-    maxAttempts: 3
+    codeLength: parseInt(process.env.TWO_FACTOR_CODE_LENGTH, 10) || 6,
+    expiryMinutes: parseInt(process.env.TWO_FACTOR_EXPIRY_MINUTES, 10) || 10,
+    maxAttempts: parseInt(process.env.TWO_FACTOR_MAX_ATTEMPTS, 10) || 3
   }
 };

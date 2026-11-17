@@ -102,9 +102,11 @@ app.get("/solicitudes-ayuda/:id", async (req, res) => {
       include: {
         beneficiario: {
           include: {
-            pacienteRegistro: true,
-            evaluacionPsicologica: true,
-            evaluacionSocial: true,
+            pacienteRegistro: {
+              include: {
+                evaluacionSocial: true,
+              },
+            },
           },
         },
         solicitadoPor: {
@@ -171,6 +173,19 @@ app.post("/solicitudes-ayuda", upload.single('documentoRespaldo'), async (req, r
       return res.status(400).json({
         success: false,
         mensaje: "Faltan campos requeridos: beneficiarioId, solicitadoPorId, tipoAyuda, descripcion",
+      });
+    }
+
+    // El psicólogo no solicita ayudas: su función es subir el informe psicológico
+    const solicitante = await prisma.usuario.findUnique({
+      where: { id: parseInt(solicitadoPorId) },
+      select: { rol: true },
+    });
+
+    if (solicitante?.rol === 'PSICOLOGO') {
+      return res.status(403).json({
+        success: false,
+        mensaje: "El psicólogo no puede solicitar ayudas. Su función es subir el informe psicológico.",
       });
     }
 

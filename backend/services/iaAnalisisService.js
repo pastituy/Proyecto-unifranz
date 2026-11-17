@@ -1,9 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const pdfParse = require('pdf-parse');
+const { callAI } = require('./aiService');
 
-const OPENROUTER_API_KEY = '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';
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 /**
  * Analiza un PDF de informe social y retorna puntajes de vulnerabilidad
@@ -146,42 +145,28 @@ RESPONDE ÚNICAMENTE CON UN OBJETO JSON en este formato exacto:
   "nivelVulnerabilidad": "ALTA" (si puntajeTotal >= 60), "MEDIA" (si 30-59), o "BAJA" (si < 30)
 }`;
 
-    // 3. Llamar a la API de OpenRouter
-    console.log('\nLlamando a OpenRouter API...');
+    // 3. Llamar a la API de IA
+    console.log('\nLlamando a la API de IA...');
 
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'http://localhost:3000',
-        'X-Title': 'Fundación OncoFeliz - Análisis Social'
-      },
-      body: JSON.stringify({
-        model: 'openai/gpt-4o-mini', // Modelo económico y rápido
-        messages: [
-          {
-            role: 'system',
-            content: 'Eres un asistente experto en análisis de vulnerabilidad social. Analizas informes sociales y produces evaluaciones objetivas basadas en criterios específicos. Siempre respondes con JSON válido.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.3, // Baja temperatura para respuestas más consistentes
-        max_tokens: 1000
-      })
+    const { ok, data } = await callAI({
+      messages: [
+        {
+          role: 'system',
+          content: 'Eres un asistente experto en análisis de vulnerabilidad social. Analizas informes sociales y produces evaluaciones objetivas basadas en criterios específicos. Siempre respondes con JSON válido.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 800
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error de OpenRouter:', errorText);
-      throw new Error(`Error en API de OpenRouter: ${response.status} ${errorText}`);
+    if (!ok) {
+      throw new Error(`Error from AI provider: ${data.error?.message || 'Unknown error'}`);
     }
 
-    const data = await response.json();
-    console.log('\nRespuesta de OpenRouter recibida');
+    console.log('\nRespuesta de la IA recibida');
 
     // 4. Extraer y parsear la respuesta
     const contenidoIA = data.choices[0].message.content;
@@ -332,42 +317,28 @@ INSTRUCCIONES:
 - Si no encuentras alguna información en el informe, usa null
 - El resumen ejecutivo debe ser comprensivo pero conciso`;
 
-    // 3. Llamar a la API de OpenRouter
-    console.log('\nLlamando a OpenRouter API para generar resumen...');
+    // 3. Llamar a la API de IA
+    console.log('\nLlamando a la API de IA para generar resumen...');
 
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'http://localhost:3000',
-        'X-Title': 'Fundación OncoFeliz - Resumen de Caso'
-      },
-      body: JSON.stringify({
-        model: 'openai/gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'Eres un asistente experto en análisis de casos sociales. Generas resúmenes ejecutivos claros y estructurados. Siempre respondes con JSON válido.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.4,
-        max_tokens: 2000
-      })
+    const { ok, data } = await callAI({
+      messages: [
+        {
+          role: 'system',
+          content: 'Eres un asistente experto en análisis de casos sociales. Generas resúmenes ejecutivos claros y estructurados. Siempre respondes con JSON válido.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 2500
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error de OpenRouter:', errorText);
-      throw new Error(`Error en API de OpenRouter: ${response.status} ${errorText}`);
+    if (!ok) {
+      throw new Error(`Error from AI provider: ${data.error?.message || 'Unknown error'}`);
     }
 
-    const data = await response.json();
-    console.log('\nRespuesta de OpenRouter recibida');
+    console.log('\nRespuesta de la IA recibida');
 
     // 4. Extraer y parsear la respuesta
     const contenidoIA = data.choices[0].message.content;
