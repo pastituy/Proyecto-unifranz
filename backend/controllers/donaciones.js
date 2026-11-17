@@ -177,43 +177,28 @@ app.post("/donaciones", async (req, res) => {
     });
   }
 });
+// ============================================
+// ENDPOINTS DESHABILITADOS PARA TRANSPARENCIA
+// ============================================
+// Las donaciones NO pueden ser modificadas ni eliminadas
+// para mantener la trazabilidad y transparencia de los registros
+
 app.put("/donaciones/:id", async (req, res) => {
-  try {
-    const donaciones = await prisma.donaciones.update({
-      where: {
-        id: Number(req.params.id),
-      },
-      data: req.body,
-    });
-    res.json({
-      mensaje: "donaciones actualizado correcamente",
-      data: donaciones,
-    });
-  } catch (error) {
-    console.error("Error al editar donación:", error);
-    res.status(500).json({
-      mensaje: "Error al editar donaciones",
-      error: error.message,
-    });
-  }
+  console.warn(`⚠️ Intento de modificar donación ID ${req.params.id} bloqueado por política de transparencia`);
+  return res.status(403).json({
+    error: "Operación no permitida",
+    mensaje: "Las donaciones no pueden ser modificadas por motivos de transparencia y trazabilidad. Todos los registros de donaciones son inmutables.",
+    codigo: "DONATION_IMMUTABLE"
+  });
 });
+
 app.delete("/donaciones/:id", async (req, res) => {
-  try {
-    await prisma.donaciones.delete({
-      where: {
-        id: Number(req.params.id),
-      },
-    });
-    res.json({
-      mensaje: "donaciones eliminado correctamente",
-    });
-  } catch (error) {
-    console.error("Error al eliminar donación:", error);
-    res.status(500).json({
-      mensaje: "Error al eliminar donaciones",
-      error: error.message,
-    });
-  }
+  console.warn(`⚠️ Intento de eliminar donación ID ${req.params.id} bloqueado por política de transparencia`);
+  return res.status(403).json({
+    error: "Operación no permitida",
+    mensaje: "Las donaciones no pueden ser eliminadas por motivos de transparencia y trazabilidad. Todos los registros de donaciones son permanentes.",
+    codigo: "DONATION_IMMUTABLE"
+  });
 });
 
 // Endpoint para enviar notificación de donación por email

@@ -20,7 +20,6 @@ import TrabajoSocial from "./pages/private/trabajadorSocial";
 import Asistente from "./pages/private/asistente";
 import AdminBeneficiarios from "./pages/private/adminBeneficiarios";
 import TrabajadorSocialBeneficiarios from "./pages/private/trabajadorSocial/beneficiarios";
-import PsicologoBeneficiarios from "./pages/private/psicologo/beneficiarios";
 import AsistenteSolicitudes from "./pages/private/asistente/solicitudes";
 import AsistenteReportes from "./pages/private/asistente/reportes";
 import TrabajadorSocialReportes from "./pages/private/trabajadorSocial/reportes";
@@ -93,7 +92,7 @@ const AppContent = () => {
               <Route
                 path="/dasboard/chat"
                 element={
-                  <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR, ROLES.PSICOLOGO]}>
+                  <ProtectedRoute allowedRoles={[ROLES.ADMINISTRADOR]}>
                     <CancerNewsChat />
                   </ProtectedRoute>
                 }
@@ -174,14 +173,6 @@ const AppContent = () => {
                 element={
                   <ProtectedRoute allowedRoles={[ROLES.PSICOLOGO]}>
                     <Psicologo />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/dasboard/psicologo/beneficiarios"
-                element={
-                  <ProtectedRoute allowedRoles={[ROLES.PSICOLOGO]}>
-                    <PsicologoBeneficiarios />
                   </ProtectedRoute>
                 }
               />

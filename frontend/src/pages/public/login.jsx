@@ -48,7 +48,7 @@ const Login = () => {
       }
 
       // Login exitoso
-      login(data.data, data.token);
+      login(data.data, data.token, data.refreshToken);
       toast.success("Inicio de sesión exitoso");
 
       // Redirigir según el rol

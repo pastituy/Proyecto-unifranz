@@ -9,15 +9,22 @@ import { FaUserPlus } from "react-icons/fa6";
 import { FaMoneyBill } from "react-icons/fa6";
 import { FaInternetExplorer, FaClipboardList, FaUserMd, FaUsers, FaFileAlt, FaHandHoldingHeart, FaWhatsapp } from "react-icons/fa";
 import { HiChat } from "react-icons/hi";
+import Avatar from "./UserAvatar";
+import ProfilePhotoModal from "./ProfilePhotoModal";
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, toggleSidebar }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
   const { logout, user } = useUser();
 
   const handleNavigation = (path) => {
     navigate(path);
+    // Cerrar sidebar en móvil después de navegar
+    if (toggleSidebar && window.innerWidth <= 1024) {
+      toggleSidebar();
+    }
   };
 
   const handleLogout = () => {
@@ -84,16 +91,6 @@ const Sidebar = () => {
           icon: <FaUserMd />,
           text: "Evaluación Psicológica",
         },
-        {
-          path: "/dasboard/psicologo/beneficiarios",
-          icon: <FaUsers />,
-          text: "Mis Beneficiarios",
-        },
-        {
-          path: "/dasboard/chat",
-          icon: <HiChat />,
-          text: "Chat",
-        },
       ],
 
       // Items para Trabajador Social
@@ -141,7 +138,7 @@ const Sidebar = () => {
   const navigationItems = getNavigationItems();
 
   return (
-    <SidebarContainer $collapsed={collapsed}>
+    <SidebarContainer $collapsed={collapsed} $isOpen={isOpen}>
       <LogoContainer>
         <LogoWrapper>
           <LogoText $collapsed={collapsed}>OF</LogoText>
@@ -151,7 +148,11 @@ const Sidebar = () => {
 
       {/* Mostrar información del usuario */}
       {!collapsed && user && (
-        <UserInfoSection>
+        <UserInfoSection
+          onClick={() => setShowPhotoModal(true)}
+          title="Cambiar foto de perfil"
+        >
+          <Avatar fotoPerfil={user.fotoPerfil} size={44} />
           <UserInfoText>
             <UserInfoName>{user.nombre}</UserInfoName>
             <UserInfoRole>{user.rol?.toUpperCase()}</UserInfoRole>
@@ -190,6 +191,10 @@ const Sidebar = () => {
           <UserName>Cerrar Sesión</UserName>
         </UserInfo>
       </UserSection>
+
+      {showPhotoModal && (
+        <ProfilePhotoModal onClose={() => setShowPhotoModal(false)} />
+      )}
     </SidebarContainer>
   );
 };
@@ -315,6 +320,21 @@ const SidebarContainer = styled.div`
   top: 0;
   z-index: 100;
   overflow-x: hidden;
+  transition: transform 0.3s ease;
+
+  @media (max-width: 1024px) {
+    position: fixed;
+    transform: ${props => props.$isOpen ? 'translateX(0)' : 'translateX(-100%)'};
+    z-index: 100;
+  }
+
+  @media (max-width: 768px) {
+    width: 280px;
+  }
+
+  @media (max-width: 480px) {
+    width: 260px;
+  }
 `;
 
 const LogoContainer = styled.div`
@@ -360,12 +380,23 @@ const UserInfoSection = styled.div`
   padding: 0.5rem 1rem;
   margin-bottom: 1rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(255, 99, 71, 0.06);
+  }
 `;
 
 const UserInfoText = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 `;
 
 const UserInfoName = styled.span`

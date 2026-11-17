@@ -300,7 +300,8 @@ const getCurrentUser = async (req, res) => {
         email: true,
         rol: true,
         telefono: true,
-        createdAt: true,
+        fotoPerfil: true,
+        creadoEn: true,
         // NO incluir password
       }
     });

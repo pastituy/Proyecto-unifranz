@@ -6,6 +6,7 @@ const router = express.Router();
 class FacebookZapierController {
   constructor() {
     this.zapierWebhookURL =
+      process.env.ZAPIER_FACEBOOK_WEBHOOK_URL ||
       "https://hooks.zapier.com/hooks/catch/24344172/uzglyqj/";
     // Almacén de publicaciones programadas (en memoria)
     this.scheduledPosts = new Map();

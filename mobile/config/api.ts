@@ -26,7 +26,7 @@ const getApiUrl = () => {
     }
 
     // Fallback a una IP fija (cambiar según sea necesario)
-    return 'http://192.168.100.139:3000';
+    return 'http://192.168.0.14:3000';
   }
 
   // En producción, usar la URL del servidor real

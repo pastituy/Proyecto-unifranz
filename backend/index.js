@@ -78,6 +78,17 @@ app.disable('x-powered-by');
 // SERVIR ARCHIVOS ESTÁTICOS
 // ============================================
 
+// Fotos de perfil: se muestran en el frontend (otro origen), por eso se permite
+// Cross-Origin-Resource-Policy: cross-origin solo para esta carpeta
+app.use('/uploads/perfiles', express.static(path.join(__dirname, 'uploads', 'perfiles'), {
+  dotfiles: 'deny',
+  index: false,
+  maxAge: '7d',
+  setHeaders: (res) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
+}));
+
 // Servir archivos estáticos con headers de seguridad
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
   dotfiles: 'deny',        // Denegar acceso a archivos ocultos
@@ -150,6 +161,14 @@ app.get("/health", (req, res) => {
 
 // ✅ Autenticación - MIGRADO
 app.use("/api/auth", authRoutes);
+
+// ✅ Perfil de usuario (foto de perfil) - NUEVO
+const perfilRoutes = require("./routes/perfil.routes");
+app.use("/api/perfil", perfilRoutes);
+
+// ✅ Derivaciones psicológicas (trabajador social -> psicólogo) - NUEVO
+const psicologiaRoutes = require("./routes/psicologia.routes");
+app.use("/api/psicologia", psicologiaRoutes);
 
 // ✅ IA (OpenRouter) - NUEVO
 const aiRoutes = require("./routes/ai.routes");

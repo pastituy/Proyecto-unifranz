@@ -76,3 +76,5 @@ documentos/
 *.tmp
 *.temp
 nul
+backend/uploads/perfiles/*
+backend/private/

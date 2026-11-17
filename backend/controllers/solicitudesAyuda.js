@@ -174,6 +174,19 @@ app.post("/solicitudes-ayuda", upload.single('documentoRespaldo'), async (req, r
       });
     }
 
+    // El psicólogo no solicita ayudas: su función es subir el informe psicológico
+    const solicitante = await prisma.usuario.findUnique({
+      where: { id: parseInt(solicitadoPorId) },
+      select: { rol: true },
+    });
+
+    if (solicitante?.rol === 'PSICOLOGO') {
+      return res.status(403).json({
+        success: false,
+        mensaje: "El psicólogo no puede solicitar ayudas. Su función es subir el informe psicológico.",
+      });
+    }
+
     // Validar estado médico del beneficiario
     const beneficiario = await prisma.beneficiario.findUnique({
       where: { id: parseInt(beneficiarioId) },

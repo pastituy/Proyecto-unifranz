@@ -8,24 +8,27 @@ datasource db {
 }
 
 model Usuario {
-  id                     Int                @id @default(autoincrement())
+  id                     Int                     @id @default(autoincrement())
   nombre                 String
-  email                  String             @unique
+  email                  String                  @unique
   telefono               String
   pais                   String
   password               String
-  creadoEn               DateTime           @default(now())
+  creadoEn               DateTime                @default(now())
   ci                     String?
+  fotoPerfil             String?
   rol                    Rol?
   usuarioCompana         UsuarioCompana[]
   ayudasRegistradas      Ayuda[]
-  casosAceptados         Beneficiario[]     @relation("AceptadoPor")
-  beneficiariosAsignados Beneficiario[]     @relation("AsignadoA")
+  casosAceptados         Beneficiario[]          @relation("AceptadoPor")
+  beneficiariosAsignados Beneficiario[]          @relation("AsignadoA")
   evaluacionesSociales   EvaluacionSocial[]
   notificaciones         Notificacion[]
-  registrosCreados       PacienteRegistro[] @relation("CreadorRegistro")
-  solicitudesRevisadas   SolicitudAyuda[]   @relation("RevisadoPor")
-  solicitudesCreadas     SolicitudAyuda[]   @relation("SolicitadoPor")
+  registrosCreados       PacienteRegistro[]      @relation("CreadorRegistro")
+  solicitudesRevisadas   SolicitudAyuda[]        @relation("RevisadoPor")
+  solicitudesCreadas     SolicitudAyuda[]        @relation("SolicitadoPor")
+  derivacionesCreadas    DerivacionPsicologica[] @relation("DerivadoPor")
+  informesPsicologicos   DerivacionPsicologica[] @relation("PsicologoInforme")
 }
 
 model Donaciones {
@@ -119,26 +122,27 @@ model UsuarioCompana {
 }
 
 model PacienteRegistro {
-  id                  Int               @id @default(autoincrement())
-  nombreCompletoNino  String
-  fechaNacimiento     DateTime
-  edad                Int
-  ciNino              String?
-  diagnostico         String
-  nombreCompletoTutor String
-  ciTutor             String
-  parentesco          String
-  telefonoTutor       String
-  direccion           String
-  emailTutor          String?
-  creadoPorId         Int
-  fechaRegistro       DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-  motivoRechazo       String?
-  estado              EstadoRegistro    @default(REGISTRO_INICIAL)
-  beneficiario        Beneficiario?
-  evaluacionSocial    EvaluacionSocial?
-  creadoPor           Usuario           @relation("CreadorRegistro", fields: [creadoPorId], references: [id])
+  id                       Int                     @id @default(autoincrement())
+  nombreCompletoNino       String
+  fechaNacimiento          DateTime
+  edad                     Int
+  ciNino                   String?
+  diagnostico              String
+  nombreCompletoTutor      String
+  ciTutor                  String
+  parentesco               String
+  telefonoTutor            String
+  direccion                String
+  emailTutor               String?
+  creadoPorId              Int
+  fechaRegistro            DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
+  motivoRechazo            String?
+  estado                   EstadoRegistro          @default(REGISTRO_INICIAL)
+  beneficiario             Beneficiario?
+  evaluacionSocial         EvaluacionSocial?
+  derivacionesPsicologicas DerivacionPsicologica[]
+  creadoPor                Usuario                 @relation("CreadorRegistro", fields: [creadoPorId], references: [id])
 
   @@map("pacientes_registro")
 }
@@ -163,6 +167,29 @@ model EvaluacionSocial {
   trabajadorSocial       Usuario             @relation(fields: [trabajadorSocialId], references: [id])
 
   @@map("evaluaciones_sociales")
+}
+
+// Derivación de un caso al psicólogo. No forma parte del flujo de aprobación:
+// el caso sigue su curso (trabajador social -> administrador) mientras el psicólogo sube su informe.
+model DerivacionPsicologica {
+  id                 Int              @id @default(autoincrement())
+  pacienteRegistroId Int
+  derivadoPorId      Int
+  motivo             String
+  estado             EstadoDerivacion @default(PENDIENTE)
+  psicologoId        Int?
+  informePdf         String?
+  observaciones      String?
+  fechaDerivacion    DateTime         @default(now())
+  fechaInforme       DateTime?
+  updatedAt          DateTime         @updatedAt
+  pacienteRegistro   PacienteRegistro @relation(fields: [pacienteRegistroId], references: [id], onDelete: Cascade)
+  derivadoPor        Usuario          @relation("DerivadoPor", fields: [derivadoPorId], references: [id])
+  psicologo          Usuario?         @relation("PsicologoInforme", fields: [psicologoId], references: [id])
+
+  @@index([pacienteRegistroId])
+  @@index([estado])
+  @@map("derivaciones_psicologicas")
 }
 
 model Beneficiario {
@@ -335,6 +362,11 @@ enum EstadoRegistro {
   EN_EVALUACION_ADMINISTRADOR
   BENEFICIARIO_ACTIVO
   CASO_RECHAZADO
+}
+
+enum EstadoDerivacion {
+  PENDIENTE
+  COMPLETADA
 }
 
 enum EstadoBeneficiario {

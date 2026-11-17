@@ -49,7 +49,7 @@ const Verify2FA = () => {
       }
 
       // Login exitoso
-      login(data.data, data.token);
+      login(data.data, data.token, data.refreshToken);
       toast.success("Verificación exitosa");
 
       // Redirigir según el rol

@@ -209,38 +209,18 @@ const Donaciones = () => {
     resetForm();
   };
 
+  // ============================================
+  // FUNCIONES DESHABILITADAS PARA TRANSPARENCIA
+  // ============================================
+  // Las donaciones NO pueden ser modificadas ni eliminadas
+  // para mantener la trazabilidad y transparencia de los registros
+
   const editarDonacion = (data) => {
-    setForm({
-      nombreDonante: data.nombreDonante || "",
-      cantidad: data.cantidad || "",
-      metodoPago: data.metodoPago || "QR",
-      fecha: data.fecha ? dayjs(data.fecha).format('YYYY-MM-DD') : new Date().toISOString().split('T')[0],
-      numeroTransaccion: data.numeroTransaccion || "",
-      banco: data.banco || "Banco Simulado",
-      idCampana: data.idCampana || ""
-    });
-    setItem(data);
-    setIsEditing(true);
-    setShowModal(true);
+    toast.error("⚠️ Las donaciones no pueden ser modificadas por motivos de transparencia y trazabilidad");
   };
 
   const eliminarDonacion = async (id) => {
-    if (!window.confirm("¿Está seguro de eliminar esta donación?")) return;
-
-    try {
-      const response = await fetch(`http://localhost:3000/donaciones/${id}`, {
-        method: "DELETE",
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        toast.error(data.error || "Error al eliminar donación");
-        return;
-      }
-      getData();
-      toast.success("Donación eliminada con éxito");
-    } catch (error) {
-      toast.error("Hubo un problema al eliminar la donación");
-    }
+    toast.error("⚠️ Las donaciones no pueden ser eliminadas por motivos de transparencia y trazabilidad");
   };
 
   const generateQR = async () => {
@@ -542,8 +522,9 @@ const Donaciones = () => {
       <Table
         columns={columns}
         data={donacionesFiltradas}
-        onEdit={editarDonacion}
-        onDelete={eliminarDonacion}
+        onEdit={null}
+        onDelete={null}
+        readOnly={true}
       />
 
       {showModal && (
@@ -768,111 +749,13 @@ const Donaciones = () => {
                 </ErrorContainer>
               )}
 
-              {/* Formulario de edición (modo tradicional) */}
-              {isEditing && (
-                <Form onSubmit={async (e) => {
-                  e.preventDefault();
-                  try {
-                    const response = await fetch(`http://localhost:3000/donaciones/${item.id}`, {
-                      method: "PUT",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(form),
-                    });
-                    const result = await response.json();
-                    if (!response.ok) {
-                      toast.error(result.error || "Error al actualizar donación");
-                      return;
-                    }
-                    getData();
-                    closeModal();
-                    toast.success("Donación actualizada con éxito");
-                  } catch (error) {
-                    toast.error("Hubo un problema al actualizar la donación");
-                  }
-                }}>
-                  <FormGroup>
-                    <Label>Nombre del Donante</Label>
-                    <Input
-                      type="text"
-                      name="nombreDonante"
-                      value={form.nombreDonante}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </FormGroup>
-
-                  <FormGroup>
-                    <Label>Cantidad (Bs)</Label>
-                    <Input
-                      type="number"
-                      name="cantidad"
-                      value={form.cantidad}
-                      onChange={handleInputChange}
-                      step="0.01"
-                      min="0"
-                      required
-                    />
-                  </FormGroup>
-
-                  <FormGroup>
-                    <Label>Campaña (Opcional)</Label>
-                    <Select
-                      name="idCampana"
-                      value={form.idCampana}
-                      onChange={handleInputChange}
-                    >
-                      <option value="">Sin campaña específica</option>
-                      {campanas.map((campana) => (
-                        <option key={campana.id} value={campana.id}>
-                          {campana.titulo}
-                        </option>
-                      ))}
-                    </Select>
-                  </FormGroup>
-
-                  <FormGroup>
-                    <Label>Banco</Label>
-                    <Input
-                      type="text"
-                      name="banco"
-                      value={form.banco}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </FormGroup>
-
-                  <FormGroup>
-                    <Label>Número de Transacción</Label>
-                    <Input
-                      type="text"
-                      name="numeroTransaccion"
-                      value={form.numeroTransaccion}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </FormGroup>
-
-                  <FormGroup>
-                    <Label>Fecha</Label>
-                    <Input
-                      type="date"
-                      name="fecha"
-                      value={form.fecha}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </FormGroup>
-
-                  <ButtonGroup>
-                    <CancelButton type="button" onClick={closeModal}>
-                      Cancelar
-                    </CancelButton>
-                    <SubmitButton type="submit">
-                      Actualizar
-                    </SubmitButton>
-                  </ButtonGroup>
-                </Form>
-              )}
+              {/* ============================================
+                  FORMULARIO DE EDICIÓN DESHABILITADO
+                  ============================================
+                  Por motivos de transparencia y trazabilidad,
+                  las donaciones no pueden ser modificadas una
+                  vez registradas en el sistema.
+              */}
             </ModalContent>
           </Modal>
         </ModalOverlay>
@@ -886,6 +769,14 @@ export default Donaciones;
 // Styled Components
 const Container = styled.div`
   padding: 20px;
+
+  @media (max-width: 768px) {
+    padding: 15px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 10px;
+  }
 `;
 
 const TotalBox = styled.div`
@@ -894,6 +785,8 @@ const TotalBox = styled.div`
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   color: white;
+  flex: 1;
+  min-width: 250px;
 
   h3 {
     margin: 0 0 0.5rem 0;
@@ -901,18 +794,45 @@ const TotalBox = styled.div`
     font-weight: 500;
     opacity: 0.9;
   }
+
+  @media (max-width: 768px) {
+    padding: 1rem 1.5rem;
+    min-width: 100%;
+
+    h3 {
+      font-size: 0.8rem;
+    }
+  }
 `;
 
 const Total = styled.div`
   font-size: 2rem;
   font-weight: bold;
   color: white;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.3rem;
+  }
 `;
 
 const Actions = styled.div`
   display: flex;
   gap: 1rem;
   align-items: center;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: stretch;
+
+    button {
+      flex: 1;
+    }
+  }
 `;
 
 const TopSection = styled.div`
@@ -922,6 +842,11 @@ const TopSection = styled.div`
   margin-bottom: 20px;
   flex-wrap: wrap;
   gap: 1rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
 `;
 
 const LoginButton = styled.button`
@@ -964,6 +889,21 @@ const Modal = styled.div`
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+
+  @media (max-width: 768px) {
+    width: 95%;
+    max-width: 500px;
+    max-height: 95vh;
+    border-radius: 8px;
+  }
+
+  @media (max-width: 480px) {
+    width: 100%;
+    max-width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
 `;
 
 const ModalHeader = styled.div`
@@ -981,6 +921,23 @@ const ModalHeader = styled.div`
     font-size: 20px;
     font-weight: 600;
   }
+
+  @media (max-width: 768px) {
+    padding: 16px 20px;
+
+    h2 {
+      font-size: 18px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 14px 16px;
+    border-radius: 0;
+
+    h2 {
+      font-size: 16px;
+    }
+  }
 `;
 
 const CloseButton = styled.button`
@@ -995,14 +952,32 @@ const CloseButton = styled.button`
   align-items: center;
   justify-content: center;
   transition: background 0.3s ease;
+  flex-shrink: 0;
 
   &:hover {
     background: rgba(255, 255, 255, 0.3);
+  }
+
+  @media (max-width: 480px) {
+    width: 28px;
+    height: 28px;
+
+    svg {
+      font-size: 20px;
+    }
   }
 `;
 
 const ModalContent = styled.div`
   padding: 24px;
+
+  @media (max-width: 768px) {
+    padding: 20px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 16px;
+  }
 `;
 
 const Form = styled.form`
@@ -1124,12 +1099,26 @@ const QRBox = styled.div`
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
+
+  @media (max-width: 480px) {
+    padding: 15px;
+  }
 `;
 
 const QRImage = styled.img`
   width: 280px;
   height: 280px;
   display: block;
+
+  @media (max-width: 768px) {
+    width: 240px;
+    height: 240px;
+  }
+
+  @media (max-width: 480px) {
+    width: 200px;
+    height: 200px;
+  }
 `;
 
 const DownloadQRButton = styled.button`
@@ -1382,6 +1371,15 @@ const FilterPanel = styled.div`
   padding: 24px;
   margin-bottom: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  @media (max-width: 768px) {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 12px;
+  }
 `;
 
 const FilterTitle = styled.h3`
@@ -1392,18 +1390,35 @@ const FilterTitle = styled.h3`
   display: flex;
   align-items: center;
   gap: 8px;
+
+  @media (max-width: 768px) {
+    font-size: 16px;
+    margin-bottom: 15px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 14px;
+  }
 `;
 
 const FilterContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
+
+  @media (max-width: 768px) {
+    gap: 15px;
+  }
 `;
 
 const FilterButtonGroup = styled.div`
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    gap: 8px;
+  }
 `;
 
 const FilterButton = styled.button`
@@ -1427,6 +1442,18 @@ const FilterButton = styled.button`
   &:active {
     transform: translateY(0);
   }
+
+  @media (max-width: 768px) {
+    padding: 8px 16px;
+    font-size: 12px;
+    flex: 1 1 calc(50% - 4px);
+    min-width: 100px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
 `;
 
 const DateRangeContainer = styled.div`
@@ -1437,12 +1464,19 @@ const DateRangeContainer = styled.div`
   background: #f8f9fa;
   border-radius: 8px;
   border: 1px solid #e0e0e0;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
 `;
 
 const DateInput = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1;
 
   label {
     font-size: 13px;
@@ -1464,6 +1498,16 @@ const DateInput = styled.div`
       box-shadow: 0 0 0 3px rgba(255, 99, 71, 0.1);
     }
   }
+
+  @media (max-width: 768px) {
+    width: 100%;
+
+    input[type="date"] {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+  }
 `;
 
 const FilterStats = styled.div`
@@ -1473,6 +1517,7 @@ const FilterStats = styled.div`
   background: linear-gradient(135deg, #fef7f5 0%, #fff9f7 100%);
   border-radius: 8px;
   border-left: 4px solid #ff6347;
+  flex-wrap: wrap;
 
   span {
     font-size: 14px;
@@ -1481,6 +1526,24 @@ const FilterStats = styled.div`
     strong {
       color: #ff6347;
       font-weight: 600;
+    }
+  }
+
+  @media (max-width: 768px) {
+    gap: 12px;
+    padding: 12px;
+    flex-direction: column;
+
+    span {
+      font-size: 13px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 10px;
+
+    span {
+      font-size: 12px;
     }
   }
 `;

@@ -149,7 +149,7 @@ RESPONDE ÚNICAMENTE CON UN OBJETO JSON en este formato exacto:
     console.log('\nLlamando a OpenRouter API...');
 
     const { ok, data } = await callOpenRouter({
-      model: 'moonshotai/kimi-k2',
+      model: 'nvidia/nemotron-3.5-super-vl:free',
       messages: [
         {
           role: 'system',
@@ -323,7 +323,7 @@ INSTRUCCIONES:
     console.log('\nLlamando a OpenRouter API para generar resumen...');
 
     const { ok, data } = await callOpenRouter({
-      model: 'moonshotai/kimi-k2',
+      model: 'nvidia/nemotron-3.5-super-vl:free',
       messages: [
         {
           role: 'system',

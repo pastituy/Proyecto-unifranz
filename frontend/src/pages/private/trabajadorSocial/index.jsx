@@ -1,14 +1,26 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { useUser } from "../../../context/userContext";
-import { FaUserPlus, FaClipboardCheck, FaSearch, FaFilePdf, FaPaperPlane, FaEye, FaCheckCircle, FaTimesCircle, FaHourglassHalf, FaEdit, FaTrash } from "react-icons/fa";
+import { FaUserPlus, FaClipboardCheck, FaSearch, FaFilePdf, FaPaperPlane, FaEye, FaCheckCircle, FaTimesCircle, FaHourglassHalf, FaEdit, FaTrash, FaUserMd } from "react-icons/fa";
 import PdfViewer from "../../../components/PdfViewer";
+import { useInformePsicologico } from "../../../hooks/useInformePsicologico";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const TrabajoSocial = () => {
-  const { user, token } = useUser();
+  const { user, token, authFetch } = useUser();
   const [activeTab, setActiveTab] = useState("registros");
+
+  // Derivación a psicología
+  const [showDerivarModal, setShowDerivarModal] = useState(false);
+  const [registroDerivar, setRegistroDerivar] = useState(null);
+  const [motivoDerivacion, setMotivoDerivacion] = useState("");
+  const [derivando, setDerivando] = useState(false);
+  const {
+    pdfViewer: informePsicologicoViewer,
+    abrirInforme: abrirInformePsicologico,
+    cerrarInforme: cerrarInformePsicologico,
+  } = useInformePsicologico(setError);
   const [registros, setRegistros] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -452,6 +464,60 @@ const TrabajoSocial = () => {
     return matchSearch && matchEstado;
   });
 
+  const tieneDerivacionPendiente = (registro) =>
+    registro.derivacionesPsicologicas?.some((d) => d.estado === "PENDIENTE");
+
+  const abrirDerivar = (registro) => {
+    setRegistroDerivar(registro);
+    setMotivoDerivacion("");
+    setError("");
+    setShowDetalleModal(false);
+    setShowDerivarModal(true);
+  };
+
+  const cerrarDerivar = () => {
+    if (derivando) return;
+    setShowDerivarModal(false);
+    setRegistroDerivar(null);
+    setMotivoDerivacion("");
+  };
+
+  const handleDerivarSubmit = async (e) => {
+    e.preventDefault();
+    if (!motivoDerivacion.trim()) {
+      setError("Indique el motivo de la derivación");
+      return;
+    }
+
+    setDerivando(true);
+    setError("");
+    try {
+      const response = await authFetch(`${API_URL}/api/psicologia/derivaciones`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pacienteRegistroId: registroDerivar.id,
+          motivo: motivoDerivacion.trim(),
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSuccess(`Caso de ${registroDerivar.nombreCompletoNino} derivado a psicología`);
+        setShowDerivarModal(false);
+        setRegistroDerivar(null);
+        setMotivoDerivacion("");
+        fetchRegistros();
+        setTimeout(() => setSuccess(""), 3000);
+      } else {
+        setError(data.mensaje || "Error al derivar el caso");
+      }
+    } catch (err) {
+      setError(err.message || "Error de conexión");
+    } finally {
+      setDerivando(false);
+    }
+  };
+
   const handleViewPdf = (pdfFilename, title) => {
     setPdfUrl(`${API_URL}/pdf/${pdfFilename}`);
     setPdfTitle(title);
@@ -568,6 +634,25 @@ const TrabajoSocial = () => {
                               <FaFilePdf title="Ver PDF Social" />
                             </IconButton>
                           )}
+                          {registro.estado !== "CASO_RECHAZADO" && (
+                            tieneDerivacionPendiente(registro) ? (
+                              <IconButton
+                                onClick={() => { setSelectedRegistro(registro); setShowDetalleModal(true); }}
+                                style={{ color: '#ff9800' }}
+                                title="Derivado a psicología: informe pendiente"
+                              >
+                                <FaHourglassHalf />
+                              </IconButton>
+                            ) : (
+                              <IconButton
+                                onClick={() => abrirDerivar(registro)}
+                                style={{ color: '#7b5e57' }}
+                                title="Derivar a psicología"
+                              >
+                                <FaUserMd />
+                              </IconButton>
+                            )
+                          )}
                         </ActionButtons>
                       </TableCell>
                     </TableRow>
@@ -580,7 +665,7 @@ const TrabajoSocial = () => {
       </ContentArea>
 
       {/* Modal Nuevo Registro */}
-      <Modal show={showRegistroModal}>
+      <Modal $show={showRegistroModal}>
         <ModalContent>
           <ModalHeader>
             <ModalTitle>{isEditMode ? 'Editar Registro de Paciente' : 'Nuevo Registro de Paciente'}</ModalTitle>
@@ -722,7 +807,7 @@ const TrabajoSocial = () => {
       </Modal>
 
       {/* Modal Evaluación Social */}
-      <Modal show={showEvaluacionModal}>
+      <Modal $show={showEvaluacionModal}>
         <ModalContent>
           <ModalHeader>
             <ModalTitle>Evaluación Social</ModalTitle>
@@ -880,7 +965,7 @@ const TrabajoSocial = () => {
       </Modal>
 
       {/* Modal Detalle */}
-      <Modal show={showDetalleModal}>
+      <Modal $show={showDetalleModal}>
         <ModalContent>
           <ModalHeader>
             <ModalTitle>Detalle del Registro</ModalTitle>
@@ -923,6 +1008,52 @@ const TrabajoSocial = () => {
               )}
 
               <DetalleSection>
+                <DetalleSectionTitle>Psicología</DetalleSectionTitle>
+                {!selectedRegistro.derivacionesPsicologicas?.length ? (
+                  <DetalleItem style={{ padding: "0 24px" }}>
+                    Este caso no ha sido derivado a psicología.
+                  </DetalleItem>
+                ) : (
+                  selectedRegistro.derivacionesPsicologicas.map((d) => (
+                    <DerivacionItem key={d.id}>
+                      <DerivacionHeader>
+                        <DerivacionEstado $completada={d.estado === "COMPLETADA"}>
+                          {d.estado === "COMPLETADA" ? "Informe entregado" : "Informe pendiente"}
+                        </DerivacionEstado>
+                        <span>Derivado el {new Date(d.fechaDerivacion).toLocaleDateString()}</span>
+                      </DerivacionHeader>
+                      <div><strong>Motivo:</strong> {d.motivo}</div>
+                      {d.estado === "COMPLETADA" && (
+                        <>
+                          <div>
+                            <strong>Psicólogo/a:</strong> {d.psicologo?.nombre} · {new Date(d.fechaInforme).toLocaleDateString()}
+                          </div>
+                          {d.observaciones && (
+                            <div><strong>Observaciones:</strong> {d.observaciones}</div>
+                          )}
+                          <IconButton
+                            type="button"
+                            onClick={() => abrirInformePsicologico(d, selectedRegistro.nombreCompletoNino)}
+                            style={{ marginTop: 8, width: "fit-content", gap: 6, padding: "8px 12px" }}
+                          >
+                            <FaFilePdf /> Ver informe psicológico
+                          </IconButton>
+                        </>
+                      )}
+                    </DerivacionItem>
+                  ))
+                )}
+                {selectedRegistro.estado !== "CASO_RECHAZADO" && !tieneDerivacionPendiente(selectedRegistro) && (
+                  <div style={{ padding: "8px 24px 0" }}>
+                    <SecondaryButton type="button" onClick={() => abrirDerivar(selectedRegistro)}>
+                      <FaUserMd style={{ marginRight: 6 }} />
+                      {selectedRegistro.derivacionesPsicologicas?.length ? "Derivar de nuevo" : "Derivar a psicología"}
+                    </SecondaryButton>
+                  </div>
+                )}
+              </DetalleSection>
+
+              <DetalleSection>
                 <DetalleSectionTitle>Estado del Caso</DetalleSectionTitle>
                 <StatusBadge status={selectedRegistro.estado} style={{fontSize: "1rem", padding: "10px 20px"}}>
                   {getEstadoLabel(selectedRegistro.estado)}
@@ -940,7 +1071,7 @@ const TrabajoSocial = () => {
       </Modal>
 
       {/* Modal Confirmación Eliminación */}
-      <Modal show={showDeleteModal}>
+      <Modal $show={showDeleteModal}>
         <ModalContent style={{ maxWidth: '500px' }}>
           <ModalHeader>
             <ModalTitle>Confirmar Eliminación</ModalTitle>
@@ -970,6 +1101,59 @@ const TrabajoSocial = () => {
           </div>
         </ModalContent>
       </Modal>
+
+      {/* Modal Derivar a Psicología */}
+      <Modal $show={showDerivarModal}>
+        <ModalContent style={{ maxWidth: '560px' }}>
+          <ModalHeader>
+            <ModalTitle>Derivar a Psicología</ModalTitle>
+            <CloseButton onClick={cerrarDerivar}>&times;</CloseButton>
+          </ModalHeader>
+          {registroDerivar && (
+            <form onSubmit={handleDerivarSubmit}>
+              <InfoBox>
+                <strong>Paciente:</strong> {registroDerivar.nombreCompletoNino}<br />
+                <strong>Edad:</strong> {registroDerivar.edad} años<br />
+                <strong>Diagnóstico:</strong> {registroDerivar.diagnostico}
+              </InfoBox>
+              <div style={{ padding: '0 24px 16px' }}>
+                <FormGroup>
+                  <Label htmlFor="motivoDerivacion">Motivo de la derivación *</Label>
+                  <TextArea
+                    id="motivoDerivacion"
+                    value={motivoDerivacion}
+                    onChange={(e) => setMotivoDerivacion(e.target.value)}
+                    placeholder="Ej.: el niño presenta ansiedad ante el tratamiento, la madre refiere cambios de conducta..."
+                    rows={4}
+                    maxLength={1000}
+                    required
+                  />
+                </FormGroup>
+                <p style={{ fontSize: '0.85rem', color: '#888', margin: '10px 0 0' }}>
+                  El psicólogo recibirá una notificación y subirá su informe. El caso sigue su curso normal
+                  hacia el administrador mientras tanto.
+                </p>
+              </div>
+              <ModalActions>
+                <SecondaryButton type="button" onClick={cerrarDerivar} disabled={derivando}>
+                  Cancelar
+                </SecondaryButton>
+                <PrimaryButton type="submit" disabled={derivando || !motivoDerivacion.trim()}>
+                  <FaUserMd /> {derivando ? "Derivando..." : "Derivar"}
+                </PrimaryButton>
+              </ModalActions>
+            </form>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {informePsicologicoViewer && (
+        <PdfViewer
+          pdfUrl={informePsicologicoViewer.url}
+          title={informePsicologicoViewer.title}
+          onClose={cerrarInformePsicologico}
+        />
+      )}
 
       {/* PDF Viewer */}
       {showPdfViewer && (
@@ -1233,7 +1417,7 @@ const SuccessMessage = styled.div`
 `;
 
 const Modal = styled.div`
-  display: ${props => props.show ? 'flex' : 'none'};
+  display: ${props => props.$show ? 'flex' : 'none'};
   position: fixed;
   top: 0;
   left: 0;
@@ -1510,4 +1694,42 @@ const DetalleItem = styled.div`
   strong {
     color: #333;
   }
+`;
+
+const DerivacionItem = styled.div`
+  margin: 0 24px 12px;
+  padding: 12px 16px;
+  border: 1px solid #f0e0d6;
+  border-left: 4px solid #ff9800;
+  border-radius: 8px;
+  background: #fffaf5;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #555;
+  word-break: break-word;
+
+  strong {
+    color: #333;
+  }
+`;
+
+const DerivacionHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: #888;
+`;
+
+const DerivacionEstado = styled.span`
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  background: ${(p) => (p.$completada ? "#e8f5e9" : "#fff3e0")};
+  color: ${(p) => (p.$completada ? "#2e7d32" : "#ef6c00")};
 `;

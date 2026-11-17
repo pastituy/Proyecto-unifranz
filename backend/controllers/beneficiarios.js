@@ -269,6 +269,19 @@ app.get("/mis-registros/:trabajadorId", async (req, res) => {
       where,
       include: {
         evaluacionSocial: true,
+        derivacionesPsicologicas: {
+          select: {
+            id: true,
+            estado: true,
+            motivo: true,
+            observaciones: true,
+            fechaDerivacion: true,
+            fechaInforme: true,
+            informePdf: true,
+            psicologo: { select: { nombre: true } },
+          },
+          orderBy: { fechaDerivacion: "desc" },
+        },
       },
       orderBy: { fechaRegistro: "desc" },
     });

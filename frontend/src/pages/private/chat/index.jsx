@@ -106,7 +106,7 @@ const CancerNewsChat = () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/chatgpt-4o-latest",
+        model: "nvidia/nemotron-3.5-super-vl:free",
         messages: [
           {
             role: "system",
@@ -187,7 +187,9 @@ Extrae la información del mensaje del usuario para completar los campos.`,
     let tipo = "";
 
     try {
-      parsed = JSON.parse(botMessage);
+      // Algunos modelos envuelven el JSON en ```json ... ```
+      const sinBloque = botMessage.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+      parsed = JSON.parse(sinBloque);
       if (parsed.type === "facebook_post") {
         await publicarEnFacebook({
           title: parsed.title || "",
@@ -270,12 +272,21 @@ Extrae la información del mensaje del usuario para completar los campos.`,
         ]);
       }
     } catch (e) {
-      console.error("Error al parsear JSON:", e);
+      // Si el JSON era válido, lo que falló fue la acción (publicar/programar), no la IA
+      const esPublicacion =
+        parsed?.type === "facebook_post" || parsed?.type === "facebook_scheduled_post";
+      if (!parsed) console.error("Error al parsear JSON:", e);
       setResponses((prev) => [
         ...prev,
         {
           user: question,
-          results: [botMessage],
+          results: [
+            esPublicacion
+              ? `❌ No se pudo ${
+                  parsed.type === "facebook_post" ? "publicar" : "programar la publicación"
+                } en Facebook (el servicio de publicación no respondió).\n\n📝 Mensaje generado:\n${parsed.message}`
+              : botMessage,
+          ],
         },
       ]);
     }
